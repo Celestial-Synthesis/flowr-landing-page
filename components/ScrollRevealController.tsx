@@ -32,9 +32,20 @@ const revealGroups = [
   },
 ];
 
+const revealThresholds = [0, 0.005, 0.04, 0.16, 0.32, 0.5];
+
+function getRevealConfig(isMobile: boolean) {
+  return {
+    enterRatio: isMobile ? 0.04 : 0.16,
+    exitRatio: isMobile ? 0.005 : 0.02,
+    rootMargin: isMobile ? "0px 0px 28% 0px" : "0px 0px -14% 0px",
+  };
+}
+
 export function ScrollRevealController() {
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobileViewport = window.matchMedia("(max-width: 767px)");
     const targets = revealGroups.flatMap((group) =>
       Array.from(document.querySelectorAll<HTMLElement>(group.selector)).map(
         (element, index) => ({ ...group, element, index }),
@@ -58,37 +69,57 @@ export function ScrollRevealController() {
       }
     });
 
-    if (reducedMotion.matches) {
-      targets.forEach(({ element }) => {
-        element.classList.add("flowr-reveal-is-visible");
-      });
-      return;
-    }
+    let observer: IntersectionObserver | null = null;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const element = entry.target;
+    const connectObserver = () => {
+      observer?.disconnect();
+      observer = null;
 
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.16) {
-            element.classList.add("flowr-reveal-is-visible");
-            return;
-          }
-
-          if (!entry.isIntersecting || entry.intersectionRatio <= 0.02) {
-            element.classList.remove("flowr-reveal-is-visible");
-          }
+      if (reducedMotion.matches) {
+        targets.forEach(({ element }) => {
+          element.classList.add("flowr-reveal-is-visible");
         });
-      },
-      {
-        rootMargin: "0px 0px -14% 0px",
-        threshold: [0, 0.02, 0.16, 0.32, 0.5],
-      },
-    );
+        return;
+      }
 
-    targets.forEach(({ element }) => observer.observe(element));
+      const { enterRatio, exitRatio, rootMargin } = getRevealConfig(
+        mobileViewport.matches,
+      );
 
-    return () => observer.disconnect();
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const element = entry.target;
+
+            if (entry.isIntersecting && entry.intersectionRatio >= enterRatio) {
+              element.classList.add("flowr-reveal-is-visible");
+              return;
+            }
+
+            if (!entry.isIntersecting || entry.intersectionRatio <= exitRatio) {
+              element.classList.remove("flowr-reveal-is-visible");
+            }
+          });
+        },
+        {
+          rootMargin,
+          threshold: revealThresholds,
+        },
+      );
+
+      targets.forEach(({ element }) => observer?.observe(element));
+    };
+
+    connectObserver();
+
+    reducedMotion.addEventListener("change", connectObserver);
+    mobileViewport.addEventListener("change", connectObserver);
+
+    return () => {
+      observer?.disconnect();
+      reducedMotion.removeEventListener("change", connectObserver);
+      mobileViewport.removeEventListener("change", connectObserver);
+    };
   }, []);
 
   return null;

@@ -99,6 +99,18 @@ summary::-webkit-details-marker {
   animation: flowr-caret-pulse 1.05s ease-in-out infinite;
 }
 
+.flowr-mock-cursor {
+  left: var(--flowr-mock-cursor-left);
+  top: var(--flowr-mock-cursor-top);
+}
+
+@media (max-width: 639px) {
+  .flowr-mock-cursor {
+    left: var(--flowr-mock-cursor-mobile-left);
+    top: var(--flowr-mock-cursor-mobile-top);
+  }
+}
+
 .flowr-stage-content {
   animation: flowr-stage-content 520ms ease both;
 }

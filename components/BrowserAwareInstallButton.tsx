@@ -18,6 +18,7 @@ type BrowserAwareInstallButtonProps = {
   showDetectedStore?: boolean;
   storeMode?: "detected" | "alternate";
   storeNameConnector?: "on" | "for";
+  unsupportedMobileMode?: "message" | "hide";
   variant?: "primary" | "secondary";
 };
 
@@ -123,6 +124,7 @@ export function BrowserAwareInstallButton({
   showDetectedStore = false,
   storeMode = "detected",
   storeNameConnector = "on",
+  unsupportedMobileMode = "message",
   variant = "primary",
 }: BrowserAwareInstallButtonProps) {
   const browserEnvironment = useSyncExternalStore(
@@ -151,18 +153,24 @@ export function BrowserAwareInstallButton({
   const Icon = details.unavailable ? Clock3 : Puzzle;
 
   if (browserEnvironment === "mobile-unsupported") {
+    if (unsupportedMobileMode === "hide") {
+      return null;
+    }
+
     return (
       <span
         aria-label="FlowR is only supported on Android Firefox and desktop browsers"
         data-flowr-browser-environment={browserEnvironment}
         data-flowr-browser-store={store}
-        className={`flowr-browser-aware-install-button flowr-browser-aware-install-button--unsupported inline-flex min-h-10 flex-wrap items-center justify-center gap-2 rounded-md px-3 text-center text-sm font-semibold leading-5 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:px-4 ${unsupportedMobileClass} ${className}`}
+        className={`flowr-browser-aware-install-button flowr-browser-aware-install-button--unsupported inline-flex min-h-10 w-full items-start justify-start gap-3 rounded-md px-3 py-2.5 text-left text-sm font-semibold leading-5 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:px-4 ${unsupportedMobileClass} ${className}`}
       >
         <MonitorSmartphone
           aria-hidden="true"
-          className="flowr-browser-aware-install-button-icon size-4"
+          className="flowr-browser-aware-install-button-icon mt-0.5 size-4 shrink-0"
         />
-        Only supported on Android Firefox and desktop
+        <span className="flowr-browser-aware-install-button-copy min-w-0 flex-1 break-words">
+          Only supported on Android Firefox and desktop
+        </span>
       </span>
     );
   }

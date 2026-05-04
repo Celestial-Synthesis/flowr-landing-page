@@ -203,6 +203,7 @@ export function Pricing() {
                     showDetectedStore
                     storeMode="alternate"
                     storeNameConnector="for"
+                    unsupportedMobileMode="hide"
                     variant="secondary"
                   />
                 )}

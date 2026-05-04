@@ -20,14 +20,13 @@ import { HeroWorkflowScene } from "@/components/HeroWorkflowScene";
 import { Pricing } from "@/components/Pricing";
 import { ScrollRevealController } from "@/components/ScrollRevealController";
 import { ScrollReplayIllustration } from "@/components/WorkflowIllustration";
+import { siteUrl } from "@/lib/site";
 import {
   ContactButton,
   StoreButtons,
   chromeStoreUrl,
   firefoxStoreUrl,
 } from "@/components/StoreButtons";
-
-const siteUrl = "https://flowr.celestialsynthesis.com";
 
 const capabilities = [
   {
@@ -193,7 +192,7 @@ function ActionIllustration() {
     <div
       id="flowr-action-illustration"
       aria-hidden="true"
-      className="flowr-action-illustration relative overflow-hidden rounded-lg border border-[#eadfd8] bg-[#fffaf7] p-5 shadow-xl shadow-[#7a263f]/10"
+      className="flowr-action-illustration relative overflow-visible rounded-lg border border-[#eadfd8] bg-[#fffaf7] p-5 shadow-xl shadow-[#7a263f]/10"
       data-flowr-action-frame="true"
     >
       <div
@@ -526,9 +525,43 @@ export default function Home() {
               id="flowr-comparison-table-frame"
               className="flowr-comparison-table-frame mt-12 overflow-hidden rounded-lg border border-[#eadfd8]"
             >
+              <div
+                id="flowr-comparison-mobile-list"
+                className="flowr-comparison-mobile-list divide-y divide-[#eadfd8] bg-white md:hidden"
+              >
+                {comparison.map((row) => (
+                  <article
+                    id={elementId("flowr-comparison-card", row.label)}
+                    key={row.label}
+                    className="flowr-comparison-card p-4"
+                  >
+                    <p className="flowr-comparison-card-need text-sm font-semibold text-[#201916]">
+                      {row.label}
+                    </p>
+                    <div className="flowr-comparison-card-body mt-4 grid gap-3">
+                      <div className="flowr-comparison-card-flowr rounded-md bg-[#fffaf7] p-3">
+                        <p className="flowr-comparison-card-label text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a263f]">
+                          FlowR
+                        </p>
+                        <p className="flowr-comparison-card-copy mt-2 text-sm leading-6 text-[#3f4949]">
+                          {row.flowr}
+                        </p>
+                      </div>
+                      <div className="flowr-comparison-card-recording rounded-md bg-[#f7f1ed] p-3">
+                        <p className="flowr-comparison-card-label text-[11px] font-semibold uppercase tracking-[0.12em] text-[#675f59]">
+                          Screen recording
+                        </p>
+                        <p className="flowr-comparison-card-copy mt-2 text-sm leading-6 text-[#675f59]">
+                          {row.recording}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
               <table
                 id="flowr-comparison-table"
-                className="flowr-comparison-table w-full border-collapse bg-white text-left text-sm"
+                className="flowr-comparison-table hidden w-full border-collapse bg-white text-left text-sm md:table"
               >
                 <thead className="flowr-comparison-table-head bg-[#f7f1ed] text-[#201916]">
                   <tr>

@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
-
-const siteUrl = "https://flowr.celestialsynthesis.com";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -20,9 +20,17 @@ type WorkflowStage = {
   panelStatus: string;
   activeTarget: "name" | "instruction" | "owner" | "repair" | "share";
   target: Pick<CSSProperties, "left" | "top" | "width" | "height">;
-  cursor: Pick<CSSProperties, "left" | "top">;
   cursorMode: "pointer" | "caret";
   icon: LucideIcon;
+};
+
+type WorkflowActiveTarget = WorkflowStage["activeTarget"];
+
+type CursorCoordinates = Pick<CSSProperties, "left" | "top">;
+
+type MeasuredCursorCoordinates = {
+  activeTarget: WorkflowActiveTarget;
+  coordinates: CursorCoordinates;
 };
 
 type MockPanel = Pick<CSSProperties, "left" | "top" | "width" | "height"> & {
@@ -65,7 +73,6 @@ const stages: WorkflowStage[] = [
     panelStatus: "Recording",
     activeTarget: "name",
     target: { left: "22%", top: "34%", width: "43%", height: "22%" },
-    cursor: { left: "53%", top: "45%" },
     cursorMode: "pointer",
     icon: MousePointerClick,
   },
@@ -78,7 +85,6 @@ const stages: WorkflowStage[] = [
     panelStatus: "Instruction saved",
     activeTarget: "instruction",
     target: { left: "49%", top: "31%", width: "40%", height: "32%" },
-    cursor: { left: "85%", top: "39.5%" },
     cursorMode: "caret",
     icon: FileText,
   },
@@ -91,7 +97,6 @@ const stages: WorkflowStage[] = [
     panelStatus: "Replay active",
     activeTarget: "owner",
     target: { left: "20%", top: "41%", width: "52%", height: "22%" },
-    cursor: { left: "52%", top: "52%" },
     cursorMode: "pointer",
     icon: PlayCircle,
   },
@@ -104,7 +109,6 @@ const stages: WorkflowStage[] = [
     panelStatus: "Repair mode",
     activeTarget: "repair",
     target: { left: "47%", top: "43%", width: "42%", height: "41%" },
-    cursor: { left: "78%", top: "76%" },
     cursorMode: "pointer",
     icon: RefreshCw,
   },
@@ -117,7 +121,6 @@ const stages: WorkflowStage[] = [
     panelStatus: "Ready to share",
     activeTarget: "share",
     target: { left: "18%", top: "43%", width: "68%", height: "28%" },
-    cursor: { left: "80.5%", top: "58.5%" },
     cursorMode: "pointer",
     icon: Share2,
   },
@@ -203,6 +206,10 @@ function getRectArea(rect: LayoutRect) {
   );
 }
 
+function hasRectArea(rect: LayoutRect) {
+  return rect.right - rect.left > 0.1 && rect.bottom - rect.top > 0.1;
+}
+
 function panelToRect(
   panel: Pick<CalculatedPanel, "left" | "top" | "width" | "height">,
 ) {
@@ -259,6 +266,71 @@ function getTargetRect(stage: WorkflowStage): LayoutRect {
   };
 }
 
+function getTargetCursor(stage: WorkflowStage) {
+  const targetRect = getTargetRect(stage);
+  const coordinates = {
+    name: { left: targetRect.right - 5, top: targetRect.top + 13 },
+    instruction: { left: targetRect.right - 4.5, top: targetRect.top + 21 },
+    owner: { left: targetRect.right - 5, top: targetRect.top + 14 },
+    repair: { left: targetRect.right - 7, top: targetRect.top + 28 },
+    share: { left: targetRect.right - 4.5, top: targetRect.top + 17 },
+  }[stage.activeTarget];
+
+  return {
+    left: toPercent(clamp(coordinates.left, 4, 94)),
+    top: toPercent(clamp(coordinates.top, 8, 92)),
+  };
+}
+
+function getMeasuredCursorCoordinates(
+  activeTarget: WorkflowActiveTarget,
+  targetElement: HTMLElement,
+  canvasElement: HTMLElement,
+): CursorCoordinates {
+  const targetRect = targetElement.getBoundingClientRect();
+  const canvasRect = canvasElement.getBoundingClientRect();
+  const targetWidth = targetRect.width;
+  const targetHeight = targetRect.height;
+  const rightInset = Math.min(16, Math.max(8, targetWidth * 0.22));
+
+  const anchor =
+    activeTarget === "instruction"
+      ? {
+          left: targetRect.right - rightInset,
+          top: targetRect.top + clamp((targetHeight - 50) / 2, 8, 24),
+        }
+      : {
+          left: targetRect.right - rightInset,
+          top: targetRect.top + targetHeight / 2,
+        };
+
+  return {
+    left: toPercent(
+      clamp(((anchor.left - canvasRect.left) / canvasRect.width) * 100, 2, 96),
+    ),
+    top: toPercent(
+      clamp(((anchor.top - canvasRect.top) / canvasRect.height) * 100, 4, 94),
+    ),
+  };
+}
+
+function getCursorStyle(
+  stage: WorkflowStage,
+  measuredCursorCoordinates: MeasuredCursorCoordinates | null | undefined,
+): CSSProperties {
+  const targetCursor =
+    measuredCursorCoordinates?.activeTarget === stage.activeTarget
+      ? measuredCursorCoordinates.coordinates
+      : getTargetCursor(stage);
+
+  return {
+    "--flowr-mock-cursor-left": targetCursor.left,
+    "--flowr-mock-cursor-top": targetCursor.top,
+    "--flowr-mock-cursor-mobile-left": targetCursor.left,
+    "--flowr-mock-cursor-mobile-top": targetCursor.top,
+  } as CSSProperties;
+}
+
 function toCanvasPercentRect(rect: DOMRect, canvasRect: DOMRect): LayoutRect {
   return {
     left: ((rect.left - canvasRect.left) / canvasRect.width) * 100,
@@ -299,6 +371,30 @@ function areMeasuredLayoutSetsClose(
 
   return first.every((layout, index) =>
     areMeasuredLayoutsClose(layout, second[index]),
+  );
+}
+
+function areMeasuredCursorCoordinatesClose(
+  first: MeasuredCursorCoordinates | null | undefined,
+  second: MeasuredCursorCoordinates | null | undefined,
+) {
+  if (!first || !second) return first === second;
+
+  return (
+    first.activeTarget === second.activeTarget &&
+    first.coordinates.left === second.coordinates.left &&
+    first.coordinates.top === second.coordinates.top
+  );
+}
+
+function areMeasuredCursorCoordinateSetsClose(
+  first: Array<MeasuredCursorCoordinates | null>,
+  second: Array<MeasuredCursorCoordinates | null>,
+) {
+  if (first.length !== second.length) return false;
+
+  return first.every((coordinates, index) =>
+    areMeasuredCursorCoordinatesClose(coordinates, second[index]),
   );
 }
 
@@ -448,12 +544,11 @@ function createSupportPanels(
   const currentStageCardRect = measuredLayout?.stageCardRect ?? stageCardRect;
   const currentProgressBadgeRect =
     measuredLayout?.progressBadgeRect ?? progressBadgeRect;
+  const hasProgressBadge = hasRectArea(currentProgressBadgeRect);
   const currentStepRailRect = measuredLayout?.stepRailRect ?? stepRailRect;
-  const reservedSourceRects = [
-    targetRect,
-    currentStageCardRect,
-    currentProgressBadgeRect,
-  ];
+  const reservedSourceRects = hasProgressBadge
+    ? [targetRect, currentStageCardRect, currentProgressBadgeRect]
+    : [targetRect, currentStageCardRect];
   const coverageRects = [...reservedSourceRects, currentStepRailRect];
   const reservedRects = reservedSourceRects.map((rect) =>
     inflateRect(rect, supportGap),
@@ -516,41 +611,43 @@ function createSupportPanels(
     );
   };
 
-  addPanel(
-    {
-      left: currentStageCardRect.right + supportGap,
-      top: currentStageCardRect.top,
-      width:
-        currentProgressBadgeRect.left -
-        currentStageCardRect.right -
-        supportGap * 2,
-      height: headerHeight,
-    },
-    "metric",
-  );
+  if (hasProgressBadge) {
+    addPanel(
+      {
+        left: currentStageCardRect.right + supportGap,
+        top: currentStageCardRect.top,
+        width:
+          currentProgressBadgeRect.left -
+          currentStageCardRect.right -
+          supportGap * 2,
+        height: headerHeight,
+      },
+      "metric",
+    );
 
-  addPanel(
-    {
-      left: currentProgressBadgeRect.left - supportGap - 18,
-      top: currentProgressBadgeRect.bottom + supportGap,
-      width: 18,
-      height: Math.min(
-        targetHeight,
-        targetRect.top - currentProgressBadgeRect.bottom - supportGap * 2,
-      ),
-    },
-    "metric",
-  );
+    addPanel(
+      {
+        left: currentProgressBadgeRect.left - supportGap - 18,
+        top: currentProgressBadgeRect.bottom + supportGap,
+        width: 18,
+        height: Math.min(
+          targetHeight,
+          targetRect.top - currentProgressBadgeRect.bottom - supportGap * 2,
+        ),
+      },
+      "metric",
+    );
 
-  addPanel(
-    {
-      left: currentProgressBadgeRect.left - supportGap - 18,
-      top: currentProgressBadgeRect.top,
-      width: 18,
-      height: currentProgressBadgeRect.bottom - currentProgressBadgeRect.top,
-    },
-    "metric",
-  );
+    addPanel(
+      {
+        left: currentProgressBadgeRect.left - supportGap - 18,
+        top: currentProgressBadgeRect.top,
+        width: 18,
+        height: currentProgressBadgeRect.bottom - currentProgressBadgeRect.top,
+      },
+      "metric",
+    );
+  }
 
   addPanel(
     {
@@ -562,16 +659,19 @@ function createSupportPanels(
     "copy",
   );
 
-  addPanel(
-    {
-      left: currentProgressBadgeRect.left,
-      top: currentProgressBadgeRect.bottom + supportGap,
-      width: currentProgressBadgeRect.right - currentProgressBadgeRect.left,
-      height: targetRect.top - currentProgressBadgeRect.bottom - supportGap * 2,
-    },
-    "metric",
-    4,
-  );
+  if (hasProgressBadge) {
+    addPanel(
+      {
+        left: currentProgressBadgeRect.left,
+        top: currentProgressBadgeRect.bottom + supportGap,
+        width: currentProgressBadgeRect.right - currentProgressBadgeRect.left,
+        height:
+          targetRect.top - currentProgressBadgeRect.bottom - supportGap * 2,
+      },
+      "metric",
+      4,
+    );
+  }
 
   addPanel(
     {
@@ -828,19 +928,32 @@ function MorphingPanel({
   );
 }
 
-function StageTargetContent({ stage }: { stage: WorkflowStage }) {
+function StageTargetContent({
+  isMeasurement = false,
+  stage,
+  targetRef,
+}: {
+  isMeasurement?: boolean;
+  stage: WorkflowStage;
+  targetRef?: (element: HTMLElement | null) => void;
+}) {
+  const stageContentClassName = isMeasurement ? "" : "flowr-stage-content";
+
   if (stage.activeTarget === "instruction") {
     return (
       <div
-        id="flowr-mock-target-content-instruction"
-        className="flowr-mock-target-content flowr-mock-target-content--instruction flowr-stage-content h-full p-4 sm:p-5"
+        id={isMeasurement ? undefined : "flowr-mock-target-content-instruction"}
+        className={`flowr-mock-target-content flowr-mock-target-content--instruction ${stageContentClassName} flex h-full min-h-0 w-full flex-col p-2 sm:p-5`}
       >
-        <p className="flowr-mock-target-label text-xs font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+        <p className="flowr-mock-target-label text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7a263f] sm:text-xs sm:tracking-[0.14em]">
           Replay instruction
         </p>
         <div
-          id="flowr-mock-instruction-field"
-          className="flowr-mock-target-field flowr-mock-instruction-field mt-3 h-[calc(100%-2.1rem)] rounded-md border border-[#e5c6d1] bg-white px-4 py-3 text-sm leading-6 text-[#201916]"
+          id={isMeasurement ? undefined : "flowr-mock-instruction-field"}
+          ref={(element) => {
+            targetRef?.(element);
+          }}
+          className="flowr-mock-target-field flowr-mock-instruction-field mt-1.5 min-h-0 flex-1 overflow-visible rounded-md border border-[#e5c6d1] bg-white px-3 py-2 text-xs leading-5 text-[#201916] break-words sm:mt-3 sm:px-4 sm:py-3 sm:text-sm sm:leading-6"
           data-flowr-instruction-text="true"
         >
           Name this onboarding workflow before assigning an owner.
@@ -852,24 +965,27 @@ function StageTargetContent({ stage }: { stage: WorkflowStage }) {
   if (stage.activeTarget === "repair") {
     return (
       <div
-        id="flowr-mock-target-content-repair"
-        className="flowr-mock-target-content flowr-mock-target-content--repair flowr-stage-content flex h-full flex-col p-3 sm:p-4"
+        id={isMeasurement ? undefined : "flowr-mock-target-content-repair"}
+        className={`flowr-mock-target-content flowr-mock-target-content--repair ${stageContentClassName} w-full p-2 sm:p-4`}
       >
-        <p className="flowr-mock-target-label text-xs font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+        <p className="flowr-mock-target-label text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7a263f] sm:text-xs sm:tracking-[0.14em]">
           Changed selector
         </p>
         <div
-          id="flowr-mock-repair-card"
-          className="flowr-mock-target-card flowr-mock-repair-card mt-2 flex min-h-0 flex-1 flex-col rounded-md border border-[#eadfd8] bg-white p-3"
+          id={isMeasurement ? undefined : "flowr-mock-repair-card"}
+          className="flowr-mock-target-card flowr-mock-repair-card mt-1.5 rounded-md border border-[#eadfd8] bg-white p-2 sm:mt-2 sm:p-3"
         >
-          <p className="flowr-mock-repair-title text-sm font-semibold text-[#201916]">
+          <p className="flowr-mock-repair-title text-xs font-semibold text-[#201916] sm:text-sm">
             Owner field moved
           </p>
-          <div className="flowr-mock-repair-line mt-3 h-2 w-full rounded-sm bg-[#e7ddd7]" />
-          <div className="flowr-mock-repair-line mt-2 h-2 w-2/3 rounded-sm bg-[#e7ddd7]" />
+          <div className="flowr-mock-repair-line mt-2 h-1.5 w-full rounded-sm bg-[#e7ddd7] sm:mt-3 sm:h-2" />
+          <div className="flowr-mock-repair-line mt-1.5 h-1.5 w-2/3 rounded-sm bg-[#e7ddd7] sm:mt-2 sm:h-2" />
           <button
-            id="flowr-mock-repair-button"
-            className="flowr-mock-repair-button mt-auto rounded-md bg-[#7a263f] px-3 py-2 text-xs font-semibold text-white shadow-sm sm:text-sm"
+            id={isMeasurement ? undefined : "flowr-mock-repair-button"}
+            ref={(element) => {
+              targetRef?.(element);
+            }}
+            className="flowr-mock-repair-button ml-auto mt-2 block rounded-md bg-[#7a263f] px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-sm sm:mt-4 sm:px-3 sm:py-2 sm:text-sm"
             type="button"
           >
             Reconnect target
@@ -882,32 +998,35 @@ function StageTargetContent({ stage }: { stage: WorkflowStage }) {
   if (stage.activeTarget === "share") {
     return (
       <div
-        id="flowr-mock-target-content-share"
-        className="flowr-mock-target-content flowr-mock-target-content--share flowr-stage-content h-full p-4 sm:p-5"
+        id={isMeasurement ? undefined : "flowr-mock-target-content-share"}
+        className={`flowr-mock-target-content flowr-mock-target-content--share ${stageContentClassName} w-full p-2 sm:p-5`}
       >
-        <p className="flowr-mock-target-label text-xs font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+        <p className="flowr-mock-target-label text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7a263f] sm:text-xs sm:tracking-[0.14em]">
           Workflow library
         </p>
         <div
-          id="flowr-mock-share-item"
-          className="flowr-mock-target-card flowr-mock-share-item mt-3 flex h-[calc(100%-2.1rem)] items-center justify-between gap-4 rounded-md border border-[#e5c6d1] bg-white p-4"
+          id={isMeasurement ? undefined : "flowr-mock-share-item"}
+          className="flowr-mock-target-card flowr-mock-share-item mt-1.5 flex items-center gap-2 overflow-visible rounded-md border border-[#e5c6d1] bg-white p-2 sm:mt-3 sm:gap-4 sm:p-4"
         >
-          <div className="flowr-mock-share-copy min-w-0">
-            <p className="flowr-mock-share-title truncate text-sm font-semibold text-[#201916] sm:text-base">
+          <div className="flowr-mock-share-copy min-w-0 flex-1 basis-0">
+            <p className="flowr-mock-share-title text-xs font-semibold leading-4 text-[#201916] break-words min-[380px]:text-[13px] sm:text-base sm:leading-5">
               Customer setup walkthrough
             </p>
-            <p className="flowr-mock-share-meta mt-2 text-xs font-medium text-[#675f59] sm:text-sm">
+            <p className="flowr-mock-share-meta mt-1 text-[10px] font-medium leading-3 text-[#675f59] break-words min-[380px]:text-[11px] sm:mt-2 sm:text-sm sm:leading-5">
               5 steps - Updated today
             </p>
           </div>
           <button
-            id="flowr-mock-share-button"
-            className="flowr-mock-share-button grid size-11 shrink-0 place-items-center rounded-md bg-[#7a263f] text-white shadow-lg shadow-[#7a263f]/25"
+            id={isMeasurement ? undefined : "flowr-mock-share-button"}
+            ref={(element) => {
+              targetRef?.(element);
+            }}
+            className="flowr-mock-share-button ml-auto grid size-8 shrink-0 place-items-center rounded-md bg-[#7a263f] text-white shadow-lg shadow-[#7a263f]/25 min-[380px]:size-9 sm:size-11"
             type="button"
             data-flowr-share-focus="true"
             aria-label="Share workflow"
           >
-            <Share2 aria-hidden="true" className="size-5" />
+            <Share2 aria-hidden="true" className="size-4 sm:size-5" />
           </button>
         </div>
       </div>
@@ -917,21 +1036,24 @@ function StageTargetContent({ stage }: { stage: WorkflowStage }) {
   if (stage.activeTarget === "owner") {
     return (
       <div
-        id="flowr-mock-target-content-owner"
-        className="flowr-mock-target-content flowr-mock-target-content--owner flowr-stage-content relative h-full p-3 sm:p-4"
+        id={isMeasurement ? undefined : "flowr-mock-target-content-owner"}
+        className={`flowr-mock-target-content flowr-mock-target-content--owner ${stageContentClassName} relative w-full overflow-visible p-2 sm:p-4`}
       >
-        <p className="flowr-mock-target-label text-xs font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+        <p className="flowr-mock-target-label text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7a263f] sm:text-xs sm:tracking-[0.14em]">
           Owner email
         </p>
         <div
-          id="flowr-mock-owner-field"
-          className="flowr-mock-target-field flowr-mock-owner-field mt-2 flex h-10 items-center rounded-md border border-[#e5c6d1] bg-white px-4 text-sm font-semibold text-[#201916] sm:h-11 sm:text-base"
+          id={isMeasurement ? undefined : "flowr-mock-owner-field"}
+          ref={(element) => {
+            targetRef?.(element);
+          }}
+          className="flowr-mock-target-field flowr-mock-owner-field mt-1.5 flex h-10 items-center rounded-md border border-[#e5c6d1] bg-white px-4 text-sm font-semibold text-[#201916] sm:mt-2 sm:h-11 sm:text-base"
           data-flowr-owner-field="true"
         >
           maya@company.com
         </div>
         <div
-          id="flowr-mock-replay-tooltip"
+          id={isMeasurement ? undefined : "flowr-mock-replay-tooltip"}
           className="flowr-mock-replay-tooltip absolute left-3 top-[5.5rem] w-[min(310px,calc(100%-1.5rem))] rounded-lg border border-[#7a263f]/20 bg-white p-3 shadow-xl shadow-[#7a263f]/10 sm:left-4 sm:top-24 sm:w-[310px]"
           data-flowr-replay-tooltip="true"
         >
@@ -949,15 +1071,18 @@ function StageTargetContent({ stage }: { stage: WorkflowStage }) {
 
   return (
     <div
-      id="flowr-mock-target-content-name"
-      className="flowr-mock-target-content flowr-mock-target-content--name flowr-stage-content h-full p-3 sm:p-4"
+      id={isMeasurement ? undefined : "flowr-mock-target-content-name"}
+      className={`flowr-mock-target-content flowr-mock-target-content--name ${stageContentClassName} w-full p-2 sm:p-4`}
     >
-      <p className="flowr-mock-target-label text-xs font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+      <p className="flowr-mock-target-label text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7a263f] sm:text-xs sm:tracking-[0.14em]">
         Workflow name
       </p>
       <div
-        id="flowr-mock-name-field"
-        className="flowr-mock-target-field flowr-mock-name-field mt-2 flex h-10 items-center rounded-md border border-[#e5c6d1] bg-white px-4 text-sm font-semibold text-[#201916] sm:h-11 sm:text-base"
+        id={isMeasurement ? undefined : "flowr-mock-name-field"}
+        ref={(element) => {
+          targetRef?.(element);
+        }}
+        className="flowr-mock-target-field flowr-mock-name-field mt-1.5 flex h-10 items-center rounded-md border border-[#e5c6d1] bg-white px-4 text-sm font-semibold text-[#201916] sm:mt-2 sm:h-11 sm:text-base"
         data-flowr-name-field="true"
       >
         Customer setup walkthrough
@@ -971,12 +1096,16 @@ export function ScrollReplayIllustration() {
   const [measuredLayouts, setMeasuredLayouts] = useState<
     Array<MeasuredMockLayout | null>
   >([]);
+  const [measuredCursorCoordinates, setMeasuredCursorCoordinates] = useState<
+    Array<MeasuredCursorCoordinates | null>
+  >([]);
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const stepRailRef = useRef<HTMLDivElement>(null);
   const measuredStageCardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const measuredProgressBadgeRefs = useRef<Array<HTMLDivElement | null>>([]);
   const measuredHighlightRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const measuredCursorTargetRefs = useRef<Array<HTMLElement | null>>([]);
   const frameRef = useRef<number | null>(null);
   const measureFrameRef = useRef<number | null>(null);
 
@@ -1067,6 +1196,20 @@ export function ScrollReplayIllustration() {
           stepRailRect: nextStepRailRect,
         };
       });
+      const nextCursorCoordinates = stages.map((workflowStage, index) => {
+        const targetElement = measuredCursorTargetRefs.current[index];
+
+        if (!targetElement) return null;
+
+        return {
+          activeTarget: workflowStage.activeTarget,
+          coordinates: getMeasuredCursorCoordinates(
+            workflowStage.activeTarget,
+            targetElement,
+            canvas,
+          ),
+        };
+      });
 
       setMeasuredLayouts((currentLayouts) => {
         if (areMeasuredLayoutSetsClose(currentLayouts, nextLayouts)) {
@@ -1074,6 +1217,18 @@ export function ScrollReplayIllustration() {
         }
 
         return nextLayouts;
+      });
+      setMeasuredCursorCoordinates((currentCoordinates) => {
+        if (
+          areMeasuredCursorCoordinateSetsClose(
+            currentCoordinates,
+            nextCursorCoordinates,
+          )
+        ) {
+          return currentCoordinates;
+        }
+
+        return nextCursorCoordinates;
       });
     };
 
@@ -1102,6 +1257,9 @@ export function ScrollReplayIllustration() {
     measuredHighlightRefs.current.forEach((element) => {
       if (element) resizeObserver.observe(element);
     });
+    measuredCursorTargetRefs.current.forEach((element) => {
+      if (element) resizeObserver.observe(element);
+    });
     window.addEventListener("resize", requestMeasure);
 
     return () => {
@@ -1118,8 +1276,12 @@ export function ScrollReplayIllustration() {
 
   const stage = stages[activeStage];
   const StageIcon = stage.icon;
-  const supportPanelsByStage = stages.map((workflowStage, index) =>
-    createSupportPanels(workflowStage, measuredLayouts[index]),
+  const supportPanelsByStage = useMemo(
+    () =>
+      stages.map((workflowStage, index) =>
+        createSupportPanels(workflowStage, measuredLayouts[index]),
+      ),
+    [measuredLayouts],
   );
   const supportPanels = supportPanelsByStage[activeStage];
 
@@ -1171,7 +1333,7 @@ export function ScrollReplayIllustration() {
             >
               <div
                 id="flowr-mock-stage-card"
-                className="flowr-mock-stage-card absolute left-4 top-4 z-10 flex max-w-[calc(100%-6.5rem)] items-start gap-3 rounded-lg border border-[#eadfd8] bg-white/92 p-3 shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:left-6 sm:top-6 sm:max-w-xl"
+                className="flowr-mock-stage-card absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] items-start gap-3 rounded-lg border border-[#eadfd8] bg-white/92 p-3 shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:left-6 sm:top-6 sm:max-w-xl"
                 data-flowr-stage-card="true"
               >
                 <div className="flowr-mock-stage-icon grid size-10 shrink-0 place-items-center rounded-md bg-[#7a263f] text-white">
@@ -1192,7 +1354,7 @@ export function ScrollReplayIllustration() {
 
               <div
                 id="flowr-mock-progress-badge"
-                className="flowr-mock-progress-badge absolute right-4 top-4 z-10 rounded-lg border border-[#eadfd8] bg-white/92 px-3 py-2 text-sm font-semibold text-[#7a263f] shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:right-6 sm:top-6"
+                className="flowr-mock-progress-badge absolute right-4 top-4 z-10 hidden rounded-lg border border-[#eadfd8] bg-white/92 px-3 py-2 text-sm font-semibold text-[#7a263f] shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:right-6 sm:top-6 sm:block"
                 data-flowr-progress-badge="true"
               >
                 {stage.progress}
@@ -1214,7 +1376,7 @@ export function ScrollReplayIllustration() {
                         ref={(element) => {
                           measuredStageCardRefs.current[index] = element;
                         }}
-                        className="flowr-mock-stage-card absolute left-4 top-4 z-10 flex max-w-[calc(100%-6.5rem)] items-start gap-3 rounded-lg border border-[#eadfd8] bg-white/92 p-3 shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:left-6 sm:top-6 sm:max-w-xl"
+                        className="flowr-mock-stage-card absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] items-start gap-3 rounded-lg border border-[#eadfd8] bg-white/92 p-3 shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:left-6 sm:top-6 sm:max-w-xl"
                       >
                         <div className="flowr-mock-stage-icon grid size-10 shrink-0 place-items-center rounded-md bg-[#7a263f] text-white">
                           <MeasureIcon aria-hidden="true" className="size-5" />
@@ -1236,7 +1398,7 @@ export function ScrollReplayIllustration() {
                         ref={(element) => {
                           measuredProgressBadgeRefs.current[index] = element;
                         }}
-                        className="flowr-mock-progress-badge absolute right-4 top-4 z-10 rounded-lg border border-[#eadfd8] bg-white/92 px-3 py-2 text-sm font-semibold text-[#7a263f] shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:right-6 sm:top-6"
+                        className="flowr-mock-progress-badge absolute right-4 top-4 z-10 hidden rounded-lg border border-[#eadfd8] bg-white/92 px-3 py-2 text-sm font-semibold text-[#7a263f] shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:right-6 sm:top-6 sm:block"
                       >
                         {item.progress}
                       </div>
@@ -1245,13 +1407,23 @@ export function ScrollReplayIllustration() {
                         ref={(element) => {
                           measuredHighlightRefs.current[index] = element;
                         }}
-                        className={`flowr-mock-highlight flowr-mock-highlight--${item.activeTarget} absolute z-20 min-h-[112px] min-w-[220px] max-sm:!left-4 max-sm:!right-4 max-sm:!w-auto rounded-lg border-2 border-[#7a263f] bg-[#fff3ee] shadow-[0_0_0_8px_rgba(122,38,63,0.12)] ${
-                          item.activeTarget === "owner"
+                        className={`flowr-mock-highlight flowr-mock-highlight--${item.activeTarget} absolute z-20 min-h-[112px] min-w-[220px] max-sm:!left-4 max-sm:!right-4 max-sm:!h-auto max-sm:!min-h-0 max-sm:!w-auto rounded-lg border-2 border-[#7a263f] bg-[#fff3ee] shadow-[0_0_0_8px_rgba(122,38,63,0.12)] ${
+                          item.activeTarget === "owner" ||
+                          item.activeTarget === "instruction" ||
+                          item.activeTarget === "share"
                             ? "overflow-visible"
                             : "overflow-hidden"
                         }`}
                         style={item.target}
-                      />
+                      >
+                        <StageTargetContent
+                          isMeasurement
+                          stage={item}
+                          targetRef={(element) => {
+                            measuredCursorTargetRefs.current[index] = element;
+                          }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
@@ -1287,8 +1459,10 @@ export function ScrollReplayIllustration() {
 
               <div
                 id={`flowr-mock-highlight-${stage.activeTarget}`}
-                className={`flowr-mock-highlight flowr-mock-highlight--${stage.activeTarget} absolute z-20 min-h-[112px] min-w-[220px] max-sm:!left-4 max-sm:!right-4 max-sm:!w-auto rounded-lg border-2 border-[#7a263f] bg-[#fff3ee] shadow-[0_0_0_8px_rgba(122,38,63,0.12)] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                  stage.activeTarget === "owner"
+                className={`flowr-mock-highlight flowr-mock-highlight--${stage.activeTarget} absolute z-20 min-h-[112px] min-w-[220px] max-sm:!left-4 max-sm:!right-4 max-sm:!h-auto max-sm:!min-h-0 max-sm:!w-auto rounded-lg border-2 border-[#7a263f] bg-[#fff3ee] shadow-[0_0_0_8px_rgba(122,38,63,0.12)] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  stage.activeTarget === "owner" ||
+                  stage.activeTarget === "instruction" ||
+                  stage.activeTarget === "share"
                     ? "overflow-visible"
                     : "overflow-hidden"
                 }`}
@@ -1306,7 +1480,10 @@ export function ScrollReplayIllustration() {
                     ? "flowr-pointer-cursor--caret"
                     : ""
                 }`}
-                style={stage.cursor}
+                style={getCursorStyle(
+                  stage,
+                  measuredCursorCoordinates[activeStage],
+                )}
                 data-flowr-cursor="true"
                 data-flowr-cursor-mode={stage.cursorMode}
                 data-flowr-cursor-stage={stage.activeTarget}

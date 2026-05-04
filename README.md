@@ -40,12 +40,7 @@ Because the site is exported statically, `next/image` is configured as unoptimiz
 
 ## Launch Notes
 
-The current launch-domain placeholder is `https://flowr.celestialsynthesis.com`. Update it before production in:
-
-- `app/layout.tsx`
-- `app/page.tsx`
-- `app/robots.ts`
-- `app/sitemap.ts`
+The current launch-domain placeholder is `https://flowr.celestialsynthesis.com`. Set `NEXT_PUBLIC_SITE_URL` before production or update the fallback in `lib/site.ts`.
 
 Primary extension CTAs currently point to:
 
