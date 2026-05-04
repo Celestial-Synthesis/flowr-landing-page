@@ -1,0 +1,526 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fbf8f5;
+  --foreground: #201916;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  overflow-x: clip;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+}
+
+::selection {
+  background: #7a263f;
+  color: #ffffff;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+.flowr-record-dot {
+  animation: flowr-record-dot 1.5s ease-in-out infinite;
+}
+
+.flowr-cursor {
+  animation: flowr-cursor 2.8s ease-in-out infinite;
+}
+
+.flowr-pointer-cursor {
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+  clip-path: polygon(
+    8% 0,
+    88% 62%,
+    55% 70%,
+    75% 100%,
+    56% 100%,
+    38% 72%,
+    16% 94%
+  );
+  background: #ffffff;
+  filter: drop-shadow(0 10px 14px rgb(32 25 22 / 0.22));
+  transform-origin: top left;
+}
+
+.flowr-pointer-cursor::after {
+  content: "";
+  position: absolute;
+  display: block;
+  clip-path: polygon(
+    8% 0,
+    88% 62%,
+    55% 70%,
+    75% 100%,
+    56% 100%,
+    38% 72%,
+    16% 94%
+  );
+}
+
+.flowr-pointer-cursor::after {
+  inset: 4px;
+  background: #111111;
+}
+
+.flowr-pointer-cursor--caret {
+  width: 20px;
+  height: 50px;
+  clip-path: inset(0 round 5px);
+  filter: drop-shadow(0 8px 12px rgb(32 25 22 / 0.2));
+}
+
+.flowr-pointer-cursor--caret::after {
+  inset: 4px 6px;
+  clip-path: inset(0 round 3px);
+  animation: flowr-caret-pulse 1.05s ease-in-out infinite;
+}
+
+.flowr-stage-content {
+  animation: flowr-stage-content 520ms ease both;
+}
+
+.flowr-reveal-target {
+  opacity: 0;
+  transform: translate3d(0, 34px, 0) scale(0.985);
+  transition:
+    opacity 720ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 0ms;
+  backface-visibility: hidden;
+  will-change: opacity, transform;
+}
+
+.flowr-reveal--panel {
+  transform: translate3d(0, 42px, 0) scale(0.975);
+}
+
+.flowr-reveal--card {
+  transform: translate3d(0, 38px, 0) scale(0.98);
+}
+
+.flowr-reveal-target .flowr-reveal-child {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0) scale(0.975);
+  transition:
+    opacity 640ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 640ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 0ms;
+  backface-visibility: hidden;
+  will-change: opacity, transform;
+}
+
+.flowr-reveal-target.flowr-reveal-is-visible,
+.flowr-reveal-target.flowr-reveal-is-visible .flowr-reveal-child {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.flowr-reveal-target.flowr-reveal-is-visible {
+  transition-delay: calc(var(--flowr-reveal-index, 0) * 90ms);
+}
+
+.flowr-reveal-target.flowr-reveal-is-visible .flowr-reveal-child {
+  transition-delay: calc(120ms + var(--flowr-reveal-child-index, 0) * 80ms);
+}
+
+.flowr-hero-workflow-scene {
+  --flowr-hero-break-progress: 0;
+  --flowr-hero-shell-x: 0px;
+  --flowr-hero-shell-y: 0px;
+  --flowr-hero-shell-rotate: 0deg;
+  --flowr-hero-shell-scale: 1;
+  --flowr-hero-toolbar-opacity: 1;
+  --flowr-hero-toolbar-x: 0px;
+  --flowr-hero-toolbar-y: 0px;
+  --flowr-hero-toolbar-rotate: 0deg;
+  --flowr-hero-toolbar-scale: 1;
+  --flowr-hero-url-opacity: 1;
+  --flowr-hero-url-x: 0px;
+  --flowr-hero-url-y: 0px;
+  --flowr-hero-url-rotate: 0deg;
+  --flowr-hero-url-scale: 1;
+  --flowr-hero-form-x: 0px;
+  --flowr-hero-form-y: 0px;
+  --flowr-hero-form-rotate: 0deg;
+  --flowr-hero-form-scale: 1;
+  --flowr-hero-copy-x: 0px;
+  --flowr-hero-copy-y: 0px;
+  --flowr-hero-copy-rotate: 0deg;
+  --flowr-hero-copy-scale: 1;
+  --flowr-hero-recorder-x: 0px;
+  --flowr-hero-recorder-y: 0px;
+  --flowr-hero-recorder-rotate: 0deg;
+  --flowr-hero-recorder-scale: 1;
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 120ms linear;
+  transform-origin: center top;
+  will-change: opacity, transform;
+  animation: flowr-hero-shell 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.flowr-hero-piece,
+.flowr-hero-step {
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  transform-origin: center;
+  transition:
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+  animation: flowr-hero-piece 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.flowr-hero-piece--toolbar {
+  animation-delay: 140ms;
+}
+
+.flowr-hero-piece--form-card {
+  animation-delay: 260ms;
+}
+
+.flowr-hero-piece--copy-card {
+  animation-delay: 380ms;
+}
+
+.flowr-hero-piece--recorder-panel {
+  animation-delay: 500ms;
+}
+
+.flowr-hero-window-dot,
+.flowr-hero-url,
+.flowr-hero-field,
+.flowr-hero-copy-line,
+.flowr-hero-invite-button,
+.flowr-hero-recording-badge {
+  transition:
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+  animation: flowr-hero-detail 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.flowr-hero-workflow-scene--ready {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: none;
+}
+
+.flowr-hero-workflow-scene--ready .flowr-hero-piece,
+.flowr-hero-workflow-scene--ready .flowr-hero-step,
+.flowr-hero-workflow-scene--ready .flowr-hero-toolbar-border,
+.flowr-hero-workflow-scene--ready .flowr-hero-window-dot,
+.flowr-hero-workflow-scene--ready .flowr-hero-url,
+.flowr-hero-workflow-scene--ready .flowr-hero-field,
+.flowr-hero-workflow-scene--ready .flowr-hero-copy-line,
+.flowr-hero-workflow-scene--ready .flowr-hero-invite-button,
+.flowr-hero-workflow-scene--ready .flowr-hero-recording-badge {
+  opacity: 1;
+  transform: translate(0, 0) rotate(0deg) scale(1);
+  animation: none;
+}
+
+.flowr-hero-workflow-scene--ready .flowr-hero-piece,
+.flowr-hero-workflow-scene--ready .flowr-hero-step,
+.flowr-hero-workflow-scene--ready .flowr-hero-toolbar-border,
+.flowr-hero-workflow-scene--ready .flowr-hero-url {
+  transition-duration: 120ms;
+  transition-timing-function: linear;
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart {
+  transform: translate(var(--flowr-hero-shell-x), var(--flowr-hero-shell-y))
+    rotate(var(--flowr-hero-shell-rotate)) scale(var(--flowr-hero-shell-scale));
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-piece--toolbar {
+  opacity: var(--flowr-hero-toolbar-opacity);
+  transform: translate(var(--flowr-hero-toolbar-x), var(--flowr-hero-toolbar-y))
+    rotate(var(--flowr-hero-toolbar-rotate))
+    scale(var(--flowr-hero-toolbar-scale));
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-url {
+  opacity: var(--flowr-hero-url-opacity);
+  transform: translate(var(--flowr-hero-url-x), var(--flowr-hero-url-y))
+    rotate(var(--flowr-hero-url-rotate)) scale(var(--flowr-hero-url-scale));
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-piece--form-card {
+  transform: translate(var(--flowr-hero-form-x), var(--flowr-hero-form-y))
+    rotate(var(--flowr-hero-form-rotate)) scale(var(--flowr-hero-form-scale));
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-piece--copy-card {
+  transform: translate(var(--flowr-hero-copy-x), var(--flowr-hero-copy-y))
+    rotate(var(--flowr-hero-copy-rotate)) scale(var(--flowr-hero-copy-scale));
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-piece--recorder-panel {
+  transform: translate(
+      var(--flowr-hero-recorder-x),
+      var(--flowr-hero-recorder-y)
+    )
+    rotate(var(--flowr-hero-recorder-rotate))
+    scale(var(--flowr-hero-recorder-scale));
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-window-dot--close {
+  transform: translate(-7px, -5px) scale(0.9);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-window-dot--minimize {
+  transform: translateY(-8px) scale(0.9);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-window-dot--zoom {
+  transform: translate(7px, -5px) scale(0.9);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-field--active {
+  transform: translate(-22px, 8px) scale(0.96);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-field--secondary {
+  transform: translate(18px, 16px) scale(0.96);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-copy-line--one {
+  transform: translateX(9px) scaleX(0.94);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-copy-line--two {
+  transform: translateX(-7px) scaleX(0.9);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-copy-line--three {
+  transform: translateX(6px) scaleX(0.88);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-invite-button {
+  transform: translate(24px, 18px) rotate(1.2deg) scale(0.92);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-recording-badge {
+  transform: translate(20px, -14px) rotate(1.5deg) scale(0.9);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-step--capture {
+  transform: translate(-28px, 4px) rotate(-2deg) scale(0.94);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-step--owner {
+  transform: translate(26px, 12px) rotate(1.8deg) scale(0.94);
+}
+
+.flowr-hero-workflow-scene--ready.flowr-hero-workflow-scene--apart
+  .flowr-hero-step--publish {
+  transform: translate(14px, 28px) rotate(2.4deg) scale(0.94);
+}
+
+.flowr-hero-window-dot--close {
+  animation-delay: 220ms;
+}
+
+.flowr-hero-window-dot--minimize {
+  animation-delay: 280ms;
+}
+
+.flowr-hero-window-dot--zoom {
+  animation-delay: 340ms;
+}
+
+.flowr-hero-field--active {
+  animation-delay: 520ms;
+}
+
+.flowr-hero-field--secondary {
+  animation-delay: 610ms;
+}
+
+.flowr-hero-copy-line--one {
+  animation-delay: 650ms;
+}
+
+.flowr-hero-copy-line--two {
+  animation-delay: 710ms;
+}
+
+.flowr-hero-copy-line--three {
+  animation-delay: 770ms;
+}
+
+.flowr-hero-invite-button {
+  animation-delay: 840ms;
+}
+
+.flowr-hero-recording-badge {
+  animation-delay: 720ms;
+}
+
+.flowr-hero-step--capture {
+  animation-delay: 760ms;
+}
+
+.flowr-hero-step--owner {
+  animation-delay: 860ms;
+}
+
+.flowr-hero-step--publish {
+  animation-delay: 960ms;
+}
+
+@keyframes flowr-record-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(0.72);
+  }
+}
+
+@keyframes flowr-cursor {
+  0%,
+  100% {
+    transform: translateY(-50%) translateX(0);
+  }
+
+  45% {
+    transform: translateY(-50%) translateX(-34px);
+  }
+
+  58% {
+    transform: translateY(-50%) translateX(-34px) scale(0.9);
+  }
+}
+
+@keyframes flowr-stage-content {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes flowr-hero-shell {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes flowr-hero-piece {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes flowr-hero-detail {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes flowr-caret-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.38;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .flowr-hero-workflow-scene,
+  .flowr-reveal-target,
+  .flowr-reveal-child,
+  .flowr-hero-piece,
+  .flowr-hero-step,
+  .flowr-hero-toolbar-border,
+  .flowr-hero-window-dot,
+  .flowr-hero-url,
+  .flowr-hero-field,
+  .flowr-hero-copy-line,
+  .flowr-hero-invite-button,
+  .flowr-hero-recording-badge {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
