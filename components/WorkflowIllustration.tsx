@@ -126,6 +126,14 @@ const stages: WorkflowStage[] = [
   },
 ];
 
+const workflowStageScrollProgress = 0.82;
+const workflowWheelDeltaThreshold = 18;
+const workflowWheelIdleMs = 180;
+const workflowTouchDeltaThreshold = 44;
+const workflowAxisLockRatio = 1.15;
+const wheelLineDeltaMode = 1;
+const wheelPageDeltaMode = 2;
+
 const workflowMockLayoutConfig = {
   targetCanvasCoverage: 70,
   maximumSupportPanels: 16,
@@ -180,6 +188,68 @@ function addCalculatedPanel(
 
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+function getWorkflowScrollState(root: HTMLElement) {
+  const rootRect = root.getBoundingClientRect();
+  const scrollableDistance = Math.max(rootRect.height - window.innerHeight, 1);
+  const progress = clamp(-rootRect.top / scrollableDistance, 0, 1);
+  const stageProgress = clamp(progress / workflowStageScrollProgress, 0, 1);
+  const stageIndex = Math.round(stageProgress * (stages.length - 1));
+
+  return {
+    rootRect,
+    scrollableDistance,
+    stageIndex,
+  };
+}
+
+function getWorkflowActiveStage(root: HTMLElement) {
+  const { rootRect, stageIndex } = getWorkflowScrollState(root);
+
+  if (rootRect.top > window.innerHeight) return 0;
+  if (rootRect.bottom < 0) return stages.length - 1;
+
+  return stageIndex;
+}
+
+function isWorkflowGestureActive(rootRect: DOMRect) {
+  return rootRect.top <= 0 && rootRect.bottom >= window.innerHeight;
+}
+
+function canStepWorkflowStage(stageIndex: number, direction: number) {
+  return !(
+    (direction < 0 && stageIndex <= 0) ||
+    (direction > 0 && stageIndex >= stages.length - 1)
+  );
+}
+
+function scrollToWorkflowStage(
+  root: HTMLElement,
+  stageIndex: number,
+  scrollableDistance: number,
+) {
+  const rootTop = window.scrollY + root.getBoundingClientRect().top;
+  const stageProgress = stageIndex / Math.max(stages.length - 1, 1);
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  window.scrollTo({
+    top:
+      rootTop +
+      stageProgress * workflowStageScrollProgress * scrollableDistance,
+    behavior: prefersReducedMotion ? "auto" : "smooth",
+  });
+}
+
+function getNormalizedWheelDeltaY(event: WheelEvent) {
+  if (event.deltaMode === wheelLineDeltaMode) return event.deltaY * 16;
+  if (event.deltaMode === wheelPageDeltaMode) {
+    return event.deltaY * window.innerHeight;
+  }
+
+  return event.deltaY;
 }
 
 function inflateRect(rect: LayoutRect, amount: number) {
@@ -1108,6 +1178,16 @@ export function ScrollReplayIllustration() {
   const measuredCursorTargetRefs = useRef<Array<HTMLElement | null>>([]);
   const frameRef = useRef<number | null>(null);
   const measureFrameRef = useRef<number | null>(null);
+  const wheelGestureRef = useRef({
+    accumulatedDeltaY: 0,
+    handled: false,
+    resetTimer: null as number | null,
+  });
+  const touchGestureRef = useRef<{
+    startX: number;
+    startY: number;
+    handled: boolean;
+  } | null>(null);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -1115,28 +1195,8 @@ export function ScrollReplayIllustration() {
 
     const updateActiveStage = () => {
       frameRef.current = null;
-      const rootRect = root.getBoundingClientRect();
+      const nextStage = getWorkflowActiveStage(root);
 
-      if (rootRect.top > window.innerHeight) {
-        setActiveStage(0);
-        return;
-      }
-
-      if (rootRect.bottom < 0) {
-        setActiveStage(stages.length - 1);
-        return;
-      }
-
-      const scrollableDistance = Math.max(
-        rootRect.height - window.innerHeight,
-        1,
-      );
-      const progress = Math.min(
-        1,
-        Math.max(0, -rootRect.top / scrollableDistance),
-      );
-      const stageProgress = Math.min(1, progress / 0.82);
-      const nextStage = Math.round(stageProgress * (stages.length - 1));
       setActiveStage((current) =>
         current === nextStage ? current : nextStage,
       );
@@ -1147,16 +1207,170 @@ export function ScrollReplayIllustration() {
       frameRef.current = window.requestAnimationFrame(updateActiveStage);
     };
 
+    const resetWheelGesture = () => {
+      const gesture = wheelGestureRef.current;
+
+      gesture.accumulatedDeltaY = 0;
+      gesture.handled = false;
+
+      if (gesture.resetTimer !== null) {
+        window.clearTimeout(gesture.resetTimer);
+        gesture.resetTimer = null;
+      }
+    };
+
+    const scheduleWheelGestureReset = () => {
+      const gesture = wheelGestureRef.current;
+
+      if (gesture.resetTimer !== null) {
+        window.clearTimeout(gesture.resetTimer);
+      }
+
+      gesture.resetTimer = window.setTimeout(
+        resetWheelGesture,
+        workflowWheelIdleMs,
+      );
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.defaultPrevented || event.ctrlKey) return;
+
+      const deltaY = getNormalizedWheelDeltaY(event);
+      const absoluteDeltaY = Math.abs(deltaY);
+
+      if (
+        absoluteDeltaY === 0 ||
+        absoluteDeltaY <= Math.abs(event.deltaX) * workflowAxisLockRatio
+      ) {
+        return;
+      }
+
+      const direction = Math.sign(deltaY);
+      const { rootRect, scrollableDistance, stageIndex } =
+        getWorkflowScrollState(root);
+
+      if (!isWorkflowGestureActive(rootRect)) return;
+
+      const wheelGesture = wheelGestureRef.current;
+
+      if (wheelGesture.handled) {
+        event.preventDefault();
+        scheduleWheelGestureReset();
+        return;
+      }
+
+      if (!canStepWorkflowStage(stageIndex, direction)) {
+        resetWheelGesture();
+        return;
+      }
+
+      event.preventDefault();
+
+      if (
+        wheelGesture.accumulatedDeltaY !== 0 &&
+        Math.sign(wheelGesture.accumulatedDeltaY) !== direction
+      ) {
+        wheelGesture.accumulatedDeltaY = 0;
+      }
+
+      wheelGesture.accumulatedDeltaY += deltaY;
+      scheduleWheelGestureReset();
+
+      if (
+        Math.abs(wheelGesture.accumulatedDeltaY) < workflowWheelDeltaThreshold
+      ) {
+        return;
+      }
+
+      wheelGesture.accumulatedDeltaY = 0;
+      wheelGesture.handled = true;
+      scrollToWorkflowStage(root, stageIndex + direction, scrollableDistance);
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        touchGestureRef.current = null;
+        return;
+      }
+
+      const touch = event.touches[0];
+
+      touchGestureRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        handled: false,
+      };
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const touchGesture = touchGestureRef.current;
+
+      if (!touchGesture || event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      const deltaX = touchGesture.startX - touch.clientX;
+      const deltaY = touchGesture.startY - touch.clientY;
+      const absoluteDeltaY = Math.abs(deltaY);
+
+      if (
+        absoluteDeltaY < 4 ||
+        absoluteDeltaY <= Math.abs(deltaX) * workflowAxisLockRatio
+      ) {
+        return;
+      }
+
+      const direction = Math.sign(deltaY);
+      const { rootRect, scrollableDistance, stageIndex } =
+        getWorkflowScrollState(root);
+
+      if (!isWorkflowGestureActive(rootRect)) return;
+
+      if (touchGesture.handled) {
+        event.preventDefault();
+        return;
+      }
+
+      if (!canStepWorkflowStage(stageIndex, direction)) {
+        touchGestureRef.current = null;
+        return;
+      }
+
+      event.preventDefault();
+
+      if (absoluteDeltaY < workflowTouchDeltaThreshold) return;
+
+      touchGesture.handled = true;
+      scrollToWorkflowStage(root, stageIndex + direction, scrollableDistance);
+    };
+
+    const resetTouchGesture = () => {
+      touchGestureRef.current = null;
+    };
+
     updateActiveStage();
     window.addEventListener("scroll", requestUpdate, { passive: true });
     window.addEventListener("resize", requestUpdate);
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", resetTouchGesture, { passive: true });
+    window.addEventListener("touchcancel", resetTouchGesture, {
+      passive: true,
+    });
 
     return () => {
       if (frameRef.current !== null) {
         window.cancelAnimationFrame(frameRef.current);
       }
+
+      resetWheelGesture();
       window.removeEventListener("scroll", requestUpdate);
       window.removeEventListener("resize", requestUpdate);
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", resetTouchGesture);
+      window.removeEventListener("touchcancel", resetTouchGesture);
     };
   }, []);
 
