@@ -25,6 +25,19 @@ npm run lint
 npm run build
 ```
 
+Static export output is written to `out/`.
+
+## Netlify Deployment
+
+This project is configured for Netlify as a static Next.js export.
+
+- Build command: `npm run build`
+- Publish directory: `out`
+
+The Netlify config lives in `netlify.toml`.
+
+Because the site is exported statically, `next/image` is configured as unoptimized in `next.config.ts`.
+
 ## Launch Notes
 
 The current launch-domain placeholder is `https://flowr.celestialsynthesis.com`. Update it before production in:
