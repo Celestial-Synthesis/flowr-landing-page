@@ -120,6 +120,7 @@ export function Pricing() {
         >
           {plans.map((plan) => {
             const Icon = plan.icon;
+            const trackingLocation = `pricing_${elementId("plan", plan.name)}`;
             return (
               <article
                 id={elementId("flowr-pricing-plan", plan.name)}
@@ -169,6 +170,9 @@ export function Pricing() {
                         ? "noopener noreferrer"
                         : undefined
                     }
+                    data-flowr-cta="pricing_enterprise_contact"
+                    data-flowr-cta-location={trackingLocation}
+                    data-flowr-cta-destination={plan.href}
                     className="flowr-pricing-plan-primary-cta mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#7a263f]/20 bg-white px-4 text-sm font-semibold text-[#512238] transition hover:border-[#7a263f]/40 hover:bg-[#fff8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7a263f]"
                   >
                     <LockKeyhole aria-hidden="true" className="size-4" />
@@ -183,6 +187,12 @@ export function Pricing() {
                         : "Start free, upgrade when ready"
                     }
                     showDetectedStore={plan.name === "Free"}
+                    trackingLocation={trackingLocation}
+                    trackingName={
+                      plan.name === "Free"
+                        ? "pricing_start_free"
+                        : "pricing_start_free_upgrade"
+                    }
                     variant={plan.featured ? "primary" : "secondary"}
                   />
                 )}
@@ -192,6 +202,10 @@ export function Pricing() {
                     href={plan.secondaryHref}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-flowr-cta="pricing_enterprise_review_store"
+                    data-flowr-cta-location={trackingLocation}
+                    data-flowr-cta-store="chrome"
+                    data-flowr-cta-destination={plan.secondaryHref}
                     className="flowr-pricing-plan-secondary-cta mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md text-sm font-semibold text-[#7a263f] transition hover:bg-[#fff3ee] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7a263f]"
                   >
                     {plan.secondaryCta}
@@ -203,6 +217,8 @@ export function Pricing() {
                     showDetectedStore
                     storeMode="alternate"
                     storeNameConnector="for"
+                    trackingLocation={trackingLocation}
+                    trackingName="pricing_alternate_install"
                     unsupportedMobileMode="hide"
                     variant="secondary"
                   />

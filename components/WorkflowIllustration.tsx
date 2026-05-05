@@ -1181,6 +1181,7 @@ export function ScrollReplayIllustration() {
   const wheelGestureRef = useRef({
     accumulatedDeltaY: 0,
     handled: false,
+    handledDirection: 0,
     resetTimer: null as number | null,
   });
   const touchGestureRef = useRef<{
@@ -1212,6 +1213,7 @@ export function ScrollReplayIllustration() {
 
       gesture.accumulatedDeltaY = 0;
       gesture.handled = false;
+      gesture.handledDirection = 0;
 
       if (gesture.resetTimer !== null) {
         window.clearTimeout(gesture.resetTimer);
@@ -1255,8 +1257,17 @@ export function ScrollReplayIllustration() {
 
       if (wheelGesture.handled) {
         event.preventDefault();
-        scheduleWheelGestureReset();
-        return;
+
+        if (
+          wheelGesture.handledDirection !== 0 &&
+          direction !== 0 &&
+          direction !== wheelGesture.handledDirection
+        ) {
+          resetWheelGesture();
+        } else {
+          scheduleWheelGestureReset();
+          return;
+        }
       }
 
       if (!canStepWorkflowStage(stageIndex, direction)) {
@@ -1284,6 +1295,7 @@ export function ScrollReplayIllustration() {
 
       wheelGesture.accumulatedDeltaY = 0;
       wheelGesture.handled = true;
+      wheelGesture.handledDirection = direction;
       scrollToWorkflowStage(root, stageIndex + direction, scrollableDistance);
     };
 

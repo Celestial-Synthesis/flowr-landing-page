@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run hydrate:sdk:local",
     "dev": "next dev",
+    "prebuild": "npm run hydrate:sdk:local",
     "build": "next build",
+    "hydrate:sdk:local": "node scripts/sync-flowr-sdk-local.mjs --from-vendor",
+    "sync:sdk:local": "node scripts/sync-flowr-sdk-local.mjs",
     "prestart": "npm run build",
     "start": "serve out --listen ${PORT:-3000}",
     "lint": "eslint"

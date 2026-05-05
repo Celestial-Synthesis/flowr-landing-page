@@ -27,6 +27,16 @@ npm run build
 
 Static export output is written to `out/`.
 
+## Playground SDK
+
+The playground uses the local recorder SDK from the sibling FlowR repo instead of installing unpublished internal packages from npm.
+
+```bash
+npm run sync:sdk:local
+```
+
+The sync command builds `@flowr/sdk-recorder-local` from `../flowr`, packs the bundled internal source packages (`@flowr/sdk-core`, `@flowr/sdk-ui`, and `@flowr/sdk-recorder-kernel`) for provenance, copies the resulting tarballs to `vendor/flowr/sdk-packages/`, and refreshes the browser runtime at `public/vendor/flowr/sdk-recorder-local/`. The expanded `public/vendor/` runtime is generated and ignored; `dev` and `build` hydrate it from the repo-local tarballs automatically. The landing app loads `/vendor/flowr/sdk-recorder-local/index.js` at runtime.
+
 ## Netlify Deployment
 
 This project is configured for Netlify as a static Next.js export.
@@ -41,6 +51,24 @@ Because the site is exported statically, `next/image` is configured as unoptimiz
 ## Launch Notes
 
 The current launch-domain placeholder is `https://flowr.celestialsynthesis.com`. Set `NEXT_PUBLIC_SITE_URL` before production or update the fallback in `lib/site.ts`.
+
+The `/playground` official recordings library loads public SDK recordings from FlowR with a browser-safe publishable key. Set one of these before building:
+
+```bash
+NEXT_PUBLIC_FLOWR_PUBLISHABLE_TOKEN=flowr_pk_...
+# or
+NEXT_PUBLIC_FLOWR_API_KEY=flowr_pk_...
+```
+
+The backend defaults to `https://rfeiamxssoajeabwyean.supabase.co`; override it with `NEXT_PUBLIC_FLOWR_API_BASE_URL` for another FlowR environment.
+
+Google Tag Manager is loaded when `NEXT_PUBLIC_GTM_ID` is set before building:
+
+```bash
+NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
+```
+
+Important marketing CTAs emit a `flowr_cta_click` dataLayer event with CTA name, location, destination, store, page URL, referrer, and URL attribution params.
 
 Primary extension CTAs currently point to:
 

@@ -23,5 +23,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.4,
     },
+    {
+      url: `${siteUrl}/playground`,
+      lastModified: sitemapLastModified,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
   ];
 }

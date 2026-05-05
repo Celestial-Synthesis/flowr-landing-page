@@ -18,6 +18,8 @@ type BrowserAwareInstallButtonProps = {
   showDetectedStore?: boolean;
   storeMode?: "detected" | "alternate";
   storeNameConnector?: "on" | "for";
+  trackingLocation?: string;
+  trackingName?: string;
   unsupportedMobileMode?: "message" | "hide";
   variant?: "primary" | "secondary";
 };
@@ -124,6 +126,8 @@ export function BrowserAwareInstallButton({
   showDetectedStore = false,
   storeMode = "detected",
   storeNameConnector = "on",
+  trackingLocation = "browser_aware_install",
+  trackingName = "install_extension",
   unsupportedMobileMode = "message",
   variant = "primary",
 }: BrowserAwareInstallButtonProps) {
@@ -181,6 +185,11 @@ export function BrowserAwareInstallButton({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={details.ariaLabel}
+      data-flowr-cta={trackingName}
+      data-flowr-cta-location={trackingLocation}
+      data-flowr-cta-store={store}
+      data-flowr-cta-destination={details.href}
+      data-flowr-cta-unavailable={details.unavailable ? "true" : undefined}
       data-flowr-browser-environment={browserEnvironment}
       data-flowr-browser-store={store}
       className={`flowr-browser-aware-install-button flowr-browser-aware-install-button--available inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:px-4 ${visualClass} ${className}`}

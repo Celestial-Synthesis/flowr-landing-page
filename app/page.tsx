@@ -364,12 +364,25 @@ export default function Home() {
             >
               FAQ
             </a>
+            <a
+              id="flowr-nav-link-playground"
+              className="flowr-site-nav-link flowr-site-nav-link--playground transition hover:text-[#7a263f]"
+              href="/playground"
+              data-flowr-cta="nav_playground"
+              data-flowr-cta-location="site_header"
+              data-flowr-cta-destination="/playground"
+            >
+              Playground
+            </a>
           </div>
           <div
             id="flowr-site-nav-cta"
             className="flowr-site-nav-cta hidden md:block"
           >
-            <BrowserAwareInstallButton />
+            <BrowserAwareInstallButton
+              trackingLocation="site_header"
+              trackingName="header_install"
+            />
           </div>
         </nav>
       </header>
@@ -389,10 +402,10 @@ export default function Home() {
             >
               Guided walkthroughs that live on the page.
             </h1>
-            <HeroWorkflowScene className="order-2 mt-8 md:order-3 md:mt-12" />
+            <HeroWorkflowScene className="order-3 mt-8 md:mt-12" />
             <div
               id="flowr-hero-copy-block"
-              className="flowr-hero-copy-block order-3 flex w-full max-w-5xl flex-col items-center md:order-2"
+              className="flowr-hero-copy-block order-2 flex w-full max-w-5xl flex-col items-center"
             >
               <p
                 id="flowr-hero-description"
@@ -404,21 +417,69 @@ export default function Home() {
               </p>
               <div
                 id="flowr-hero-cta-group"
-                className="flowr-hero-cta-group mt-8 w-full max-w-xl"
+                className="flowr-hero-cta-group mt-8 flex w-full max-w-xl flex-col items-stretch gap-3"
               >
                 <div
                   id="flowr-hero-store-buttons"
                   className="flowr-hero-store-buttons hidden md:block"
                 >
-                  <StoreButtons className="justify-center" />
+                  <StoreButtons
+                    className="justify-center"
+                    trackingLocation="hero"
+                  />
                 </div>
                 <div
                   id="flowr-hero-mobile-cta"
                   className="flowr-hero-mobile-cta md:hidden"
                 >
-                  <BrowserAwareInstallButton className="w-full px-4" />
+                  <BrowserAwareInstallButton
+                    className="w-full px-4"
+                    trackingLocation="hero_mobile"
+                    trackingName="hero_install"
+                  />
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="flowr-playground-entry"
+          className="flowr-playground-entry-section border-y border-[#eadfd8] bg-white py-10"
+        >
+          <div
+            id="flowr-playground-entry-container"
+            className="flowr-playground-entry-container mx-auto grid w-full max-w-7xl gap-6 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,20rem)] lg:items-center"
+          >
+            <div className="flowr-playground-entry-copy max-w-3xl">
+              <p className="flowr-section-eyebrow flowr-playground-entry-eyebrow text-sm font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+                Try first
+              </p>
+              <h2
+                id="flowr-playground-entry-title"
+                className="flowr-playground-entry-title mt-3 text-2xl font-semibold tracking-normal text-[#201916] sm:text-3xl"
+              >
+                Explore FlowR in a safe playground before adding the extension.
+              </h2>
+              <p className="flowr-playground-entry-description mt-4 text-base leading-7 text-[#675f59]">
+                Record clicks, forms, keyboard steps, scrolls, hovers, and
+                screenshots on a practice page, then replay the walkthrough
+                immediately. The demo stays in local browser storage.
+              </p>
+            </div>
+
+            <div className="flowr-playground-entry-actions flex w-full items-center lg:justify-end">
+              <a
+                id="flowr-playground-entry-link"
+                href="/playground"
+                data-flowr-cta="open_playground"
+                data-flowr-cta-location="playground_entry"
+                data-flowr-cta-destination="/playground"
+                className="flowr-playground-entry-link inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#7a263f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#7a263f]/20 transition hover:bg-[#681f35] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7a263f]"
+              >
+                <PlayCircle aria-hidden="true" className="size-4" />
+                Open playground
+              </a>
             </div>
           </div>
         </section>
@@ -766,15 +827,16 @@ export default function Home() {
             </div>
             <div
               id="flowr-final-cta-actions"
-              className="flowr-final-cta-actions flex w-full max-w-xl flex-col gap-3"
+              className="flowr-final-cta-actions flex w-full max-w-2xl flex-col gap-3"
             >
               <StoreButtons
                 compact
                 showSafari={false}
                 stretch
                 className="w-full"
+                trackingLocation="final_cta"
               />
-              <ContactButton className="w-full" />
+              <ContactButton className="w-full" trackingLocation="final_cta" />
             </div>
           </div>
         </section>
@@ -813,6 +875,10 @@ export default function Home() {
               href={chromeStoreUrl}
               target="_blank"
               rel="noopener noreferrer"
+              data-flowr-cta="footer_chrome_store"
+              data-flowr-cta-location="site_footer"
+              data-flowr-cta-store="chrome"
+              data-flowr-cta-destination={chromeStoreUrl}
             >
               Chrome Web Store
             </a>
@@ -822,6 +888,10 @@ export default function Home() {
               href={firefoxStoreUrl}
               target="_blank"
               rel="noopener noreferrer"
+              data-flowr-cta="footer_firefox_store"
+              data-flowr-cta-location="site_footer"
+              data-flowr-cta-store="firefox"
+              data-flowr-cta-destination={firefoxStoreUrl}
             >
               Firefox Add-ons
             </a>

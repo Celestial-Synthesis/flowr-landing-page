@@ -20,6 +20,9 @@
 # production
 /build
 
+# generated SDK runtime assets
+/public/vendor/
+
 # misc
 .DS_Store
 *.pem
