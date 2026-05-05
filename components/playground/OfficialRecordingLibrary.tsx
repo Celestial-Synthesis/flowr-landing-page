@@ -31,16 +31,6 @@ const resolveErrorMessage = (error: unknown): string =>
     ? error.message
     : "Failed to load official recordings.";
 
-const isExternalUrl = (value: string | undefined): value is string => {
-  if (!value) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
-  } catch {
-    return false;
-  }
-};
-
 export default function OfficialRecordingLibrary({
   recorder,
 }: {
@@ -224,9 +214,6 @@ export default function OfficialRecordingLibrary({
           >
             {recordings.map((entry) => {
               const replayDisabled = !canReplay || entry.stepCount === 0;
-              const targetUrl = isExternalUrl(entry.targetUrl)
-                ? entry.targetUrl
-                : undefined;
 
               return (
                 <li
@@ -251,16 +238,6 @@ export default function OfficialRecordingLibrary({
                         {entry.stepCount} step{entry.stepCount === 1 ? "" : "s"}{" "}
                         · Updated {formatRecordingDate(entry.updatedAt)}
                       </p>
-                      {targetUrl && (
-                        <a
-                          href={targetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 inline-block text-xs text-[#7a263f] underline hover:text-[#681f35]"
-                        >
-                          Open target page ↗
-                        </a>
-                      )}
                     </div>
 
                     <div className="mt-4">

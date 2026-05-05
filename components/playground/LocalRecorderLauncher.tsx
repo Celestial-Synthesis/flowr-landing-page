@@ -241,8 +241,18 @@ export function useLocalRecorder(): RecorderHandle {
   }, [refreshList, reportError]);
   const replayRecording = useCallback(
     (idOrRecording: string | OfficialRecording) => {
-      void sdkRef.current
-        ?.replay(idOrRecording)
+      const sdk = sdkRef.current;
+      if (!sdk) return;
+
+      const shouldClosePanelAfterStart = typeof idOrRecording !== "string";
+
+      void sdk
+        .replay(idOrRecording)
+        .then(() => {
+          if (shouldClosePanelAfterStart) {
+            sdk.close();
+          }
+        })
         .catch((err) => reportError(err, "Failed to replay recording."));
     },
     [reportError],
