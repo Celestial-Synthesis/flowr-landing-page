@@ -74,6 +74,9 @@ type SdkModule = {
 
 const SDK_URL = "/vendor/flowr/sdk-recorder-local/index.js";
 const STORAGE_KEY = "flowr-playground:recordings";
+const OFFICIAL_REPLAY_PANEL_SUPPRESSION_KEY =
+  "flowr-playground:official-replay-panel-suppression";
+const OFFICIAL_REPLAY_PANEL_SUPPRESSION_TTL_MS = 60_000;
 const FLOWR_BUBBLE_ICON_URL = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="FlowR"><path fill="#fff" d="M6 5.5A1.5 1.5 0 0 1 7.5 4h10a1.5 1.5 0 0 1 0 3h-8v3.25h6.5a1.5 1.5 0 0 1 0 3H9.5V18.5a1.5 1.5 0 0 1-3 0v-13Z"/></svg>',
 )}`;
@@ -100,6 +103,89 @@ const toSavedRecording = (recording: SdkRecording): SavedRecording => ({
     : (recording.stepCount ?? 0),
   createdAt: recording.createdAt ?? recording.updatedAt ?? Date.now(),
 });
+
+const getSessionStorage = (): Storage | null => {
+  try {
+    return typeof window === "undefined" ? null : window.sessionStorage;
+  } catch {
+    return null;
+  }
+};
+
+const writeOfficialReplayPanelSuppression = (
+  recording: OfficialRecording,
+): void => {
+  const storage = getSessionStorage();
+  if (!storage) return;
+
+  try {
+    storage.setItem(
+      OFFICIAL_REPLAY_PANEL_SUPPRESSION_KEY,
+      JSON.stringify({ recordingId: recording.id, createdAt: Date.now() }),
+    );
+  } catch {}
+};
+
+const clearOfficialReplayPanelSuppression = (): void => {
+  try {
+    getSessionStorage()?.removeItem(OFFICIAL_REPLAY_PANEL_SUPPRESSION_KEY);
+  } catch {}
+};
+
+const readOfficialReplayPanelSuppression = (): string | null => {
+  const storage = getSessionStorage();
+  if (!storage) return null;
+
+  try {
+    const raw = storage.getItem(OFFICIAL_REPLAY_PANEL_SUPPRESSION_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as {
+      recordingId?: unknown;
+      createdAt?: unknown;
+    } | null;
+
+    if (
+      !parsed ||
+      typeof parsed.recordingId !== "string" ||
+      typeof parsed.createdAt !== "number" ||
+      Date.now() - parsed.createdAt > OFFICIAL_REPLAY_PANEL_SUPPRESSION_TTL_MS
+    ) {
+      storage.removeItem(OFFICIAL_REPLAY_PANEL_SUPPRESSION_KEY);
+      return null;
+    }
+
+    return parsed.recordingId;
+  } catch {
+    storage.removeItem(OFFICIAL_REPLAY_PANEL_SUPPRESSION_KEY);
+    return null;
+  }
+};
+
+const resolveReplayEventRecordingId = (data: unknown): string | null => {
+  if (!data || typeof data !== "object") return null;
+
+  const event = data as { id?: unknown; recording?: unknown };
+  if (typeof event.id === "string") return event.id;
+  if (!event.recording || typeof event.recording !== "object") return null;
+
+  const recording = event.recording as { id?: unknown };
+  return typeof recording.id === "string" ? recording.id : null;
+};
+
+const closeSuppressedOfficialReplayPanel = (
+  sdk: SdkHandle,
+  data?: unknown,
+): void => {
+  const suppressedRecordingId = readOfficialReplayPanelSuppression();
+  if (!suppressedRecordingId) return;
+
+  const replayRecordingId = resolveReplayEventRecordingId(data);
+  if (replayRecordingId && replayRecordingId !== suppressedRecordingId) return;
+
+  sdk.close();
+  clearOfficialReplayPanelSuppression();
+};
 
 const resolveSdkErrorMessage = (data: unknown): string => {
   if (data instanceof Error) return data.message;
@@ -188,13 +274,20 @@ export function useLocalRecorder(): RecorderHandle {
           void refreshList();
         });
 
+        handle.on("replay-start", (data) => {
+          if (destroyed) return;
+          closeSuppressedOfficialReplayPanel(handle, data);
+        });
+
         handle.on("replay-complete", () => {
           if (destroyed) return;
+          clearOfficialReplayPanelSuppression();
           void refreshList();
         });
 
         handle.on("error", (data) => {
           if (destroyed) return;
+          clearOfficialReplayPanelSuppression();
           setErrorMessage(resolveSdkErrorMessage(data));
           setStatus("error");
         });
@@ -245,6 +338,11 @@ export function useLocalRecorder(): RecorderHandle {
       if (!sdk) return;
 
       const shouldClosePanelAfterStart = typeof idOrRecording !== "string";
+      if (shouldClosePanelAfterStart) {
+        writeOfficialReplayPanelSuppression(idOrRecording);
+      } else {
+        clearOfficialReplayPanelSuppression();
+      }
 
       void sdk
         .replay(idOrRecording)
