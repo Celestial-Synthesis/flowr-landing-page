@@ -10,6 +10,7 @@
 
 import {
   useState,
+  useSyncExternalStore,
   type FormEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -56,6 +57,52 @@ function InstructionHint({ id, children }: { id?: string; children: string }) {
 
 const clampNumber = (value: number, min: number, max: number) =>
   max <= min ? min : Math.min(Math.max(value, min), max);
+
+const CONDITIONAL_PANEL_STORAGE_KEY =
+  "flowr-playground:conditional-panel-visible";
+const CONDITIONAL_PANEL_STORAGE_EVENT =
+  "flowr-playground:conditional-panel-visible-change";
+
+let conditionalPanelVisibilityFallback = false;
+
+const readConditionalPanelVisibility = () => {
+  if (typeof window === "undefined") return false;
+
+  try {
+    return window.localStorage.getItem(CONDITIONAL_PANEL_STORAGE_KEY) === "true";
+  } catch {
+    return conditionalPanelVisibilityFallback;
+  }
+};
+
+const subscribeToConditionalPanelVisibility = (listener: () => void) => {
+  if (typeof window === "undefined") return () => {};
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === CONDITIONAL_PANEL_STORAGE_KEY) listener();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(CONDITIONAL_PANEL_STORAGE_EVENT, listener);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(CONDITIONAL_PANEL_STORAGE_EVENT, listener);
+  };
+};
+
+const writeConditionalPanelVisibility = (isVisible: boolean) => {
+  conditionalPanelVisibilityFallback = isVisible;
+
+  try {
+    window.localStorage.setItem(
+      CONDITIONAL_PANEL_STORAGE_KEY,
+      String(isVisible),
+    );
+  } catch {}
+
+  window.dispatchEvent(new Event(CONDITIONAL_PANEL_STORAGE_EVENT));
+};
 
 /* ─── 1. Button bank ───────────────────────────────────────────────────────── */
 
@@ -956,8 +1003,18 @@ function ContextMenuSection() {
 /* ─── 7. Conditional visibility ───────────────────────────────────────────── */
 
 function ConditionalSection() {
-  const [show, setShow] = useState(false);
+  const show = useSyncExternalStore(
+    subscribeToConditionalPanelVisibility,
+    readConditionalPanelVisibility,
+    () => false,
+  );
   const [choice, setChoice] = useState<"A" | "B" | null>(null);
+
+  const togglePanelVisibility = () => {
+    const nextShow = !show;
+    writeConditionalPanelVisibility(nextShow);
+    if (!nextShow) setChoice(null);
+  };
 
   return (
     <section
@@ -984,10 +1041,7 @@ function ConditionalSection() {
           data-testid="conditional-toggle"
           aria-pressed={show}
           aria-controls="flowr-conditional-panel flowr-conditional-fallback-panel"
-          onClick={() => {
-            setShow((s) => !s);
-            if (show) setChoice(null);
-          }}
+          onClick={togglePanelVisibility}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
             show ? "bg-[#7a263f]" : "bg-[#eadfd8]"
           }`}

@@ -31,6 +31,21 @@ const resolveErrorMessage = (error: unknown): string =>
     ? error.message
     : "Failed to load official recordings.";
 
+const sortOfficialRecordingsOldestFirst = (
+  entries: OfficialRecordingEntry[],
+): OfficialRecordingEntry[] =>
+  [...entries].sort((a, b) => {
+    const aCreatedAt = a.recording.createdAt || a.updatedAt;
+    const bCreatedAt = b.recording.createdAt || b.updatedAt;
+
+    return (
+      aCreatedAt - bCreatedAt ||
+      a.updatedAt - b.updatedAt ||
+      a.title.localeCompare(b.title) ||
+      a.id.localeCompare(b.id)
+    );
+  });
+
 export default function OfficialRecordingLibrary({
   recorder,
 }: {
@@ -54,7 +69,7 @@ export default function OfficialRecordingLibrary({
     })
       .then((result) => {
         if (cancelled) return;
-        setRecordings(result.recordings);
+        setRecordings(sortOfficialRecordingsOldestFirst(result.recordings));
         setNextCursor(result.nextCursor);
         setStatus(result.recordings.length > 0 ? "ready" : "empty");
       })
@@ -84,7 +99,7 @@ export default function OfficialRecordingLibrary({
       targetUrl: playgroundOfficialRecordingTargetUrl,
     })
       .then((result) => {
-        setRecordings(result.recordings);
+        setRecordings(sortOfficialRecordingsOldestFirst(result.recordings));
         setNextCursor(result.nextCursor);
         setStatus(result.recordings.length > 0 ? "ready" : "empty");
       })
@@ -105,7 +120,12 @@ export default function OfficialRecordingLibrary({
       targetUrl: playgroundOfficialRecordingTargetUrl,
     })
       .then((result) => {
-        setRecordings((current) => [...current, ...result.recordings]);
+        setRecordings((current) =>
+          sortOfficialRecordingsOldestFirst([
+            ...current,
+            ...result.recordings,
+          ]),
+        );
         setNextCursor(result.nextCursor);
         setStatus("ready");
       })
@@ -123,7 +143,7 @@ export default function OfficialRecordingLibrary({
       aria-labelledby="flowr-official-library-heading"
       className="rounded-xl border border-[#eadfd8] bg-white p-6"
     >
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="mb-6">
         <div>
           <h2
             id="flowr-official-library-heading"
@@ -135,18 +155,6 @@ export default function OfficialRecordingLibrary({
             Public recordings for this playground, shared by the FlowR team.
           </p>
         </div>
-        {status !== "missing-token" && (
-          <button
-            id="flowr-official-reload"
-            data-testid="official-reload"
-            type="button"
-            onClick={reload}
-            disabled={status === "loading"}
-            className="rounded-lg border border-[#eadfd8] bg-white px-4 py-2 text-xs font-semibold text-[#201916] transition hover:bg-[#fbf8f5] disabled:cursor-wait disabled:opacity-50"
-          >
-            Refresh
-          </button>
-        )}
       </div>
 
       {status === "missing-token" && (
