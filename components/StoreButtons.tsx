@@ -1,7 +1,12 @@
-import { ArrowUpRight, Clock3, Globe, Puzzle, Store } from "lucide-react";
+import { ArrowUpRight, Clock3, Globe, Mail, Puzzle } from "lucide-react";
 import { chromeStoreUrl, contactUrl, firefoxStoreUrl } from "./store-links";
 
-export { chromeStoreUrl, contactUrl, firefoxStoreUrl } from "./store-links";
+export {
+  chromeStoreUrl,
+  contactUrl,
+  enterpriseContactUrl,
+  firefoxStoreUrl,
+} from "./store-links";
 
 type StoreButtonsProps = {
   className?: string;
@@ -90,21 +95,27 @@ export function StoreButtons({
 
 export function ContactButton({
   className = "",
+  ctaName = "contact_sales",
+  href = contactUrl,
+  label = "Get a custom solution",
   trackingLocation = "contact",
 }: {
   className?: string;
+  ctaName?: string;
+  href?: string;
+  label?: string;
   trackingLocation?: string;
 }) {
   return (
     <a
-      href={contactUrl}
-      data-flowr-cta="contact_sales"
+      href={href}
+      data-flowr-cta={ctaName}
       data-flowr-cta-location={trackingLocation}
-      data-flowr-cta-destination={contactUrl}
+      data-flowr-cta-destination={href}
       className={`flowr-contact-button inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#7a263f]/20 bg-white px-4 text-sm font-semibold text-[#512238] transition hover:border-[#7a263f]/40 hover:bg-[#fff8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7a263f] ${className}`}
     >
-      <Store aria-hidden="true" className="flowr-contact-button-icon size-4" />
-      Get a custom solution
+      <Mail aria-hidden="true" className="flowr-contact-button-icon size-4" />
+      {label}
       <ArrowUpRight
         aria-hidden="true"
         className="flowr-contact-button-arrow size-4"

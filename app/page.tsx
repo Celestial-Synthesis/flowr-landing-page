@@ -1,5 +1,7 @@
 import Image from "next/image";
 import {
+  Building2,
+  Code2,
   FileText,
   Gauge,
   Keyboard,
@@ -17,6 +19,7 @@ import {
 import { BrowserAwareInstallButton } from "@/components/BrowserAwareInstallButton";
 import { Faq, faqItems } from "@/components/Faq";
 import { HeroWorkflowScene } from "@/components/HeroWorkflowScene";
+import { EnterpriseSdkExamples } from "@/components/EnterpriseSdkExamples";
 import { Pricing } from "@/components/Pricing";
 import { ScrollRevealController } from "@/components/ScrollRevealController";
 import { ScrollReplayIllustration } from "@/components/WorkflowIllustration";
@@ -25,6 +28,7 @@ import {
   ContactButton,
   StoreButtons,
   chromeStoreUrl,
+  enterpriseContactUrl,
   firefoxStoreUrl,
 } from "@/components/StoreButtons";
 
@@ -113,6 +117,24 @@ const useCases = [
   },
 ];
 
+const enterpriseSdkHighlights = [
+  {
+    title: "Simple drop-in",
+    body: "Add a script tag and a small amount of code to start record and replay flows inside your website or web app.",
+    icon: Code2,
+  },
+  {
+    title: "Fits your product",
+    body: "Launch FlowR from your own onboarding, support, or training entry points instead of sending users to a separate surface.",
+    icon: Building2,
+  },
+  {
+    title: "Enterprise rollout support",
+    body: "Get help with SDK onboarding, public walkthrough visibility, and the rollout details that matter once embedded guidance becomes customer-facing.",
+    icon: ShieldCheck,
+  },
+];
+
 const productJsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -150,12 +172,13 @@ const productJsonLd = {
         valueAddedTaxIncluded: false,
       },
       description:
-        "Custom pricing for SDK access, unlimited usage, and larger rollout needs.",
+        "Custom pricing for SDK drop-in access, unlimited usage, and larger rollout needs.",
     },
   ],
   featureList: [
     "Browser workflow recording",
     "Guided replay with highlights and tooltips",
+    "Enterprise SDK for embedded record and replay",
     "Step repair",
     "Team sharing",
     "Screenshot and export support",
@@ -789,6 +812,91 @@ export default function Home() {
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="enterprise-sdk"
+          className="flowr-enterprise-sdk-section bg-[#fbf8f5] py-20 sm:py-24"
+        >
+          <div
+            id="flowr-enterprise-sdk-container"
+            className="flowr-enterprise-sdk-container mx-auto grid w-full max-w-7xl gap-8 px-5 sm:px-8 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)] lg:items-start lg:gap-10"
+          >
+            <div
+              id="flowr-enterprise-sdk-copy"
+              className="flowr-enterprise-sdk-copy"
+            >
+              <p className="flowr-section-eyebrow flowr-enterprise-sdk-eyebrow text-sm font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+                Enterprise SDK
+              </p>
+              <h2
+                id="flowr-enterprise-sdk-title"
+                className="flowr-enterprise-sdk-title mt-4 text-3xl font-semibold tracking-normal text-[#201916] sm:text-5xl"
+              >
+                Drop FlowR into your product with a script tag and a few lines
+                of code.
+              </h2>
+              <p
+                id="flowr-enterprise-sdk-description"
+                className="flowr-enterprise-sdk-description mt-5 max-w-3xl text-lg leading-8 text-[#675f59]"
+              >
+                Enterprise teams can embed FlowR directly in their website or
+                web app so users can start recording and replay guided flows
+                without rebuilding the experience somewhere else.
+              </p>
+
+              <div
+                id="flowr-enterprise-sdk-highlights"
+                className="flowr-enterprise-sdk-highlights mt-7 grid gap-3 sm:grid-cols-3 lg:grid-cols-1"
+              >
+                {enterpriseSdkHighlights.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <article
+                      id={elementId(
+                        "flowr-enterprise-sdk-highlight",
+                        item.title,
+                      )}
+                      key={item.title}
+                      className="flowr-enterprise-sdk-highlight rounded-lg border border-[#eadfd8] bg-white p-4 shadow-sm"
+                    >
+                      <div className="flowr-enterprise-sdk-highlight-icon grid size-11 place-items-center rounded-md bg-[#fff0ea] text-[#7a263f]">
+                        <Icon aria-hidden="true" className="size-5" />
+                      </div>
+                      <h3 className="flowr-enterprise-sdk-highlight-title mt-4 text-lg font-semibold text-[#201916]">
+                        {item.title}
+                      </h3>
+                      <p className="flowr-enterprise-sdk-highlight-copy mt-2 text-sm leading-6 text-[#675f59]">
+                        {item.body}
+                      </p>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div
+                id="flowr-enterprise-sdk-actions"
+                className="flowr-enterprise-sdk-actions mt-7 flex w-full max-w-lg flex-col gap-3"
+              >
+                <ContactButton
+                  className="w-full"
+                  ctaName="enterprise_sdk_contact"
+                  href={enterpriseContactUrl}
+                  label="Contact us about enterprise"
+                  trackingLocation="enterprise_sdk"
+                />
+                <p className="flowr-enterprise-sdk-action-note text-sm leading-6 text-[#675f59]">
+                  Opens an email draft so we can scope the enterprise plan with
+                  you.
+                </p>
+              </div>
+            </div>
+
+            <div className="hidden lg:block">
+              <EnterpriseSdkExamples />
             </div>
           </div>
         </section>

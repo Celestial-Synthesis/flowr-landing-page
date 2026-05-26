@@ -1,4 +1,8 @@
-import { chromeStoreUrl, contactUrl, firefoxStoreUrl } from "@/components/store-links";
+import {
+  chromeStoreUrl,
+  contactUrl,
+  firefoxStoreUrl,
+} from "@/components/store-links";
 import { siteUrl } from "@/lib/site";
 
 export const dynamic = "force-static";
@@ -29,7 +33,7 @@ function buildLlmsText() {
     "- Key features: workflow recording, guided replay, step fixing, team sharing, screenshots and export support, localized instructions",
     "",
     "## Preferred Description",
-    'FlowR records browser workflows once and replays them as guided walkthroughs with highlights, tooltips, step repair, and team sharing.',
+    "FlowR records browser workflows once and replays them as guided walkthroughs with highlights, tooltips, step repair, and team sharing.",
     "",
   ].join("\n");
 }

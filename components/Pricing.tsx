@@ -7,7 +7,11 @@ import {
   Rocket,
 } from "lucide-react";
 import { BrowserAwareInstallButton } from "./BrowserAwareInstallButton";
-import { chromeStoreUrl, contactUrl, firefoxStoreUrl } from "./store-links";
+import {
+  chromeStoreUrl,
+  enterpriseContactUrl,
+  firefoxStoreUrl,
+} from "./store-links";
 
 const plans = [
   {
@@ -56,17 +60,17 @@ const plans = [
     eyebrow: "For embedded workflow guidance",
     price: "Custom",
     description:
-      "Unlimited usage, SDK access, public walkthrough visibility, and support for larger rollout needs.",
+      "Unlimited usage, SDK drop-in support for record and replay, public walkthrough visibility, and onboarding for larger rollout needs.",
     icon: Building2,
-    cta: "Talk to the team",
-    href: contactUrl,
+    cta: "Email us about enterprise",
+    href: enterpriseContactUrl,
     secondaryCta: "Review store extension",
     secondaryHref: chromeStoreUrl,
     features: [
       "Unlimited recordings",
       "Unlimited screenshots",
       "Unlimited share recipients",
-      "SDK access for embedded replay",
+      "SDK drop-in for embedded record and replay",
       "Public recording visibility",
       "Custom onboarding and support",
     ],
