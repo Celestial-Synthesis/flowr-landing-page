@@ -22,6 +22,7 @@ import { HeroWorkflowScene } from "@/components/HeroWorkflowScene";
 import { EnterpriseSdkExamples } from "@/components/EnterpriseSdkExamples";
 import { Pricing } from "@/components/Pricing";
 import { ScrollRevealController } from "@/components/ScrollRevealController";
+import { TrackedYouTubeEmbed } from "@/components/TrackedYouTubeEmbed";
 import { ScrollReplayIllustration } from "@/components/WorkflowIllustration";
 import { siteUrl } from "@/lib/site";
 import {
@@ -134,6 +135,9 @@ const enterpriseSdkHighlights = [
     icon: ShieldCheck,
   },
 ];
+
+const quickDemoVideoId = "WFzmZnHFZiA";
+const quickDemoWatchUrl = "https://www.youtube.com/watch?v=WFzmZnHFZiA";
 
 const productJsonLd = {
   "@context": "https://schema.org",
@@ -467,12 +471,66 @@ export default function Home() {
         </section>
 
         <section
+          id="flowr-quick-demo"
+          className="flowr-quick-demo-section border-t border-[#eadfd8] bg-white py-16 sm:py-20"
+        >
+          <div
+            id="flowr-quick-demo-container"
+            className="flowr-quick-demo-container mx-auto grid w-full max-w-7xl gap-8 px-5 sm:px-8 lg:grid-cols-[0.84fr_1.16fr] lg:items-center"
+          >
+            <div id="flowr-quick-demo-copy" className="max-w-2xl">
+              <p className="flowr-section-eyebrow text-sm font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+                Quick demo
+              </p>
+              <h2
+                id="flowr-quick-demo-title"
+                className="mt-4 text-3xl font-semibold tracking-normal text-[#201916] sm:text-5xl"
+              >
+                See what FlowR feels like in under two minutes.
+              </h2>
+              <p
+                id="flowr-quick-demo-description"
+                className="mt-5 text-lg leading-8 text-[#675f59]"
+              >
+                This walkthrough shows how FlowR records a browser workflow and
+                replays it as guided steps on the live page.
+              </p>
+              <a
+                id="flowr-quick-demo-link"
+                href={quickDemoWatchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-flowr-cta="watch_quick_demo"
+                data-flowr-cta-location="quick_demo"
+                data-flowr-cta-destination={quickDemoWatchUrl}
+                className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#7a263f]/20 bg-white px-4 text-sm font-semibold text-[#512238] transition hover:border-[#7a263f]/40 hover:bg-[#fff8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7a263f]"
+              >
+                <PlayCircle aria-hidden="true" className="size-4" />
+                Watch on YouTube
+              </a>
+            </div>
+
+            <div
+              id="flowr-quick-demo-video-frame"
+              className="overflow-hidden rounded-xl border border-[#eadfd8] bg-[#f7f1ed] p-2 shadow-sm"
+            >
+              <TrackedYouTubeEmbed
+                iframeId="flowr-quick-demo-video"
+                videoId={quickDemoVideoId}
+                title="FlowR quick product demo"
+                className="aspect-video w-full rounded-lg"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section
           id="flowr-playground-entry"
-          className="flowr-playground-entry-section border-y border-[#eadfd8] bg-white py-10"
+          className="flowr-playground-entry-section bg-[#fff8f4] px-5 py-8 sm:px-8 sm:py-10"
         >
           <div
             id="flowr-playground-entry-container"
-            className="flowr-playground-entry-container mx-auto grid w-full max-w-7xl gap-6 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,20rem)] lg:items-center"
+            className="flowr-playground-entry-container mx-auto grid w-full max-w-7xl gap-6 rounded-2xl border border-[#eadfd8] bg-white px-6 py-6 shadow-sm sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(13rem,20rem)] lg:items-center"
           >
             <div className="flowr-playground-entry-copy max-w-3xl">
               <p className="flowr-section-eyebrow flowr-playground-entry-eyebrow text-sm font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
