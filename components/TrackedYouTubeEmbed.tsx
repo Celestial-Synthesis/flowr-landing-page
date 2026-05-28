@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { pushAnalyticsEvent } from "@/lib/analytics";
 
 type TrackedYouTubeEmbedProps = {
   iframeId: string;
@@ -8,8 +9,6 @@ type TrackedYouTubeEmbedProps = {
   title: string;
   className?: string;
 };
-
-type DataLayerEvent = Record<string, unknown>;
 
 type YouTubePlayer = {
   destroy(): void;
@@ -40,7 +39,6 @@ type YouTubeIframeApi = {
 declare global {
   interface Window {
     YT?: YouTubeIframeApi;
-    dataLayer?: DataLayerEvent[];
     onYouTubeIframeAPIReady?: () => void;
   }
 }
@@ -144,9 +142,7 @@ export function TrackedYouTubeEmbed({
     ) => {
       if (!isActive) return;
 
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: eventName,
+      pushAnalyticsEvent(eventName, {
         video_id: videoId,
         video_title: title,
         video_provider: "youtube",

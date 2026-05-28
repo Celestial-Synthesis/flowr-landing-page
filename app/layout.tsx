@@ -1,9 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import {
-  GoogleTagManager,
-  GoogleTagManagerNoScript,
-} from "@/components/GoogleTagManager";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GtmCtaTracker } from "@/components/GtmCtaTracker";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -18,7 +15,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const googleTagManagerId = process.env.NEXT_PUBLIC_GTM_ID?.trim();
+function normalizeMeasurementId(value: string | undefined) {
+  const normalizedValue = value?.trim();
+
+  if (!normalizedValue) return undefined;
+  if (!/^G-[A-Z0-9]+$/.test(normalizedValue)) return undefined;
+
+  return normalizedValue;
+}
+
+const googleAnalyticsMeasurementId =
+  normalizeMeasurementId(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID) ??
+  normalizeMeasurementId(process.env.NEXT_PUBLIC_GTM_ID);
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -104,8 +112,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[#fbf8f5] text-[#201916]">
-        <GoogleTagManagerNoScript gtmId={googleTagManagerId} />
-        <GoogleTagManager gtmId={googleTagManagerId} />
+        <GoogleAnalytics measurementId={googleAnalyticsMeasurementId} />
         <GtmCtaTracker />
         {children}
       </body>

@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-
-declare global {
-  interface Window {
-    dataLayer?: Array<Record<string, unknown>>;
-  }
-}
+import { pushAnalyticsEvent } from "@/lib/analytics";
 
 const ctaSelector = "[data-flowr-cta]";
 const firstTouchStorageKey = "flowr-attribution:first";
@@ -104,9 +99,7 @@ export function GtmCtaTracker() {
 
       const anchor = findAnchor(ctaElement);
       const currentAttribution = getAttributionFromUrl();
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: "flowr_cta_click",
+      pushAnalyticsEvent("flowr_cta_click", {
         cta_id: ctaElement.id || undefined,
         cta_name: getAttribute(ctaElement, "data-flowr-cta"),
         cta_location: getAttribute(ctaElement, "data-flowr-cta-location"),

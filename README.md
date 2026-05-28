@@ -62,13 +62,15 @@ NEXT_PUBLIC_FLOWR_API_KEY=flowr_pk_...
 
 The backend defaults to `https://rfeiamxssoajeabwyean.supabase.co`; override it with `NEXT_PUBLIC_FLOWR_API_BASE_URL` for another FlowR environment.
 
-Google Tag Manager is loaded when `NEXT_PUBLIC_GTM_ID` is set before building:
+Google Analytics 4 is loaded directly when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set before building:
 
 ```bash
-NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-VZSMD9PHLT
 ```
 
-Important marketing CTAs emit a `flowr_cta_click` dataLayer event with CTA name, location, destination, store, page URL, referrer, and URL attribution params.
+For compatibility, the app also accepts `NEXT_PUBLIC_GTM_ID` only when it contains a GA measurement ID that starts with `G-`, but `NEXT_PUBLIC_GA_MEASUREMENT_ID` is the supported variable.
+
+Important marketing CTAs emit a `flowr_cta_click` analytics event with CTA name, location, destination, store, page URL, referrer, and URL attribution params. The demo video also emits `flowr_video_start`, `flowr_video_progress`, and `flowr_video_complete`.
 
 Primary extension CTAs currently point to:
 
