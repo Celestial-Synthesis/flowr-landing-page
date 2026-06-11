@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { pushAnalyticsEvent } from "@/lib/analytics";
+import { chromeStoreUrl, firefoxStoreUrl } from "./store-links";
 
 const ctaSelector = "[data-flowr-cta]";
 const firstTouchStorageKey = "flowr-attribution:first";
@@ -106,7 +107,14 @@ function shouldDelayNavigation(event: MouseEvent, anchor: HTMLAnchorElement | nu
   return Boolean(anchor.href);
 }
 
-function sendOutboundConversionEvent(url?: string) {
+function isExtensionStoreUrl(url?: string) {
+  return url === chromeStoreUrl || url === firefoxStoreUrl;
+}
+
+function sendOutboundConversionEvent(
+  eventName: string,
+  url?: string,
+) {
   if (typeof window.gtag !== "function") {
     if (typeof url === "string") window.location.assign(url);
     return;
@@ -118,7 +126,7 @@ function sendOutboundConversionEvent(url?: string) {
     }
   };
 
-  window.gtag("event", "conversion_event_outbound_click", {
+  window.gtag("event", eventName, {
     event_callback: callback,
     event_timeout: 2000,
   });
@@ -136,6 +144,11 @@ export function GtmCtaTracker() {
 
       const anchor = findAnchor(ctaElement);
       const shouldHoldNavigation = shouldDelayNavigation(event, anchor);
+      const ctaDestination =
+        getAttribute(ctaElement, "data-flowr-cta-destination") || anchor?.href;
+      const conversionEventName = isExtensionStoreUrl(ctaDestination)
+        ? "conversion_event_outbound_click_1"
+        : "conversion_event_outbound_click";
 
       if (shouldHoldNavigation) event.preventDefault();
 
@@ -144,9 +157,7 @@ export function GtmCtaTracker() {
         cta_id: ctaElement.id || undefined,
         cta_name: getAttribute(ctaElement, "data-flowr-cta"),
         cta_location: getAttribute(ctaElement, "data-flowr-cta-location"),
-        cta_destination:
-          getAttribute(ctaElement, "data-flowr-cta-destination") ||
-          anchor?.href,
+        cta_destination: ctaDestination,
         cta_store:
           getAttribute(ctaElement, "data-flowr-cta-store") ||
           getAttribute(ctaElement, "data-flowr-browser-store"),
@@ -162,7 +173,10 @@ export function GtmCtaTracker() {
         attribution_latest: readStoredAttribution(latestTouchStorageKey),
       });
 
-      sendOutboundConversionEvent(shouldHoldNavigation ? anchor?.href : undefined);
+      sendOutboundConversionEvent(
+        conversionEventName,
+        shouldHoldNavigation ? anchor?.href : undefined,
+      );
     };
 
     document.addEventListener("click", handleClick, true);
