@@ -56,6 +56,19 @@ export function HeroWorkflowScene({ className = "" }: HeroWorkflowSceneProps) {
 
   useEffect(() => {
     const readyTimer = window.setTimeout(() => setIsReady(true), 1160);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const desktopViewport = window.matchMedia("(min-width: 1024px)");
+
+    if (reducedMotion.matches || !desktopViewport.matches) {
+      const scene = sceneRef.current;
+      if (scene) {
+        setHeroProgressVariables(scene, 0);
+      }
+
+      return () => {
+        window.clearTimeout(readyTimer);
+      };
+    }
 
     const measureScrollRange = () => {
       const scene = sceneRef.current;

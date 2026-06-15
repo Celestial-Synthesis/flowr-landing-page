@@ -69,7 +69,9 @@ const readConditionalPanelVisibility = () => {
   if (typeof window === "undefined") return false;
 
   try {
-    return window.localStorage.getItem(CONDITIONAL_PANEL_STORAGE_KEY) === "true";
+    return (
+      window.localStorage.getItem(CONDITIONAL_PANEL_STORAGE_KEY) === "true"
+    );
   } catch {
     return conditionalPanelVisibilityFallback;
   }
@@ -118,7 +120,7 @@ function ButtonBank() {
     >
       <SectionHeading
         id="flowr-surface-buttons-heading"
-        number="1"
+        number="A"
         title="Button interactions"
         hint="Click each button and watch the counter update. Replay should reproduce the clicks in the same order."
       />
@@ -232,7 +234,7 @@ function FormLab() {
     >
       <SectionHeading
         id="flowr-surface-form-heading"
-        number="2"
+        number="B"
         title="Form lab"
         hint="Fill in the fields, choose options, and submit. Use the Reset button to restore the blank state for a clean replay."
       />
@@ -498,7 +500,7 @@ function KeyboardPasswordLab() {
     >
       <SectionHeading
         id="flowr-surface-keyboard-heading"
-        number="3"
+        number="C"
         title="Keyboard and secure inputs"
         hint="Move through the fields with Tab or Shift+Tab, type into the password field, then press Enter to submit."
       />
@@ -720,7 +722,7 @@ function ScrollLane() {
     >
       <SectionHeading
         id="flowr-surface-scroll-heading"
-        number="4"
+        number="D"
         title="Scroll lane"
         hint="Scroll horizontally through the checkpoints and click targets across the full lane. Replay verifies long-distance scrolling and click recovery."
       />
@@ -817,7 +819,7 @@ function HoverEffectsSection() {
     >
       <SectionHeading
         id="flowr-surface-hover-heading"
-        number="5"
+        number="E"
         title="Hover targets"
         hint="Right-click a target while recording and choose Record hover, then hover the same target to capture the hover step."
       />
@@ -916,7 +918,7 @@ function ContextMenuSection() {
     >
       <SectionHeading
         id="flowr-surface-context-menu-heading"
-        number="6"
+        number="F"
         title="Custom context menu"
         hint="Right-click the surface to open the page menu. While recording, choose Record right click from the FlowR right-click menu to capture a context-click step."
       />
@@ -1025,7 +1027,7 @@ function ConditionalSection() {
     >
       <SectionHeading
         id="flowr-surface-conditional-heading"
-        number="7"
+        number="G"
         title="Conditional visibility"
         hint="Use the visible and fallback panels to practice advanced skip conditions for elements that appear and disappear."
       />
@@ -1157,7 +1159,7 @@ function DynamicTargetsSection() {
     >
       <SectionHeading
         id="flowr-surface-dynamic-targets-heading"
-        number="8"
+        number="H"
         title="Moving targets"
         hint="Record clicks, change the order or density, then replay to check that stable selectors still find the intended targets."
       />

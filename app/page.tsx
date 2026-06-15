@@ -17,13 +17,13 @@ import {
   Wrench,
 } from "lucide-react";
 import { BrowserAwareInstallButton } from "@/components/BrowserAwareInstallButton";
+import { DeferredGtmCtaTracker } from "@/components/DeferredGtmCtaTracker";
 import { Faq, faqItems } from "@/components/Faq";
 import { HeroWorkflowScene } from "@/components/HeroWorkflowScene";
 import { EnterpriseSdkExamples } from "@/components/EnterpriseSdkExamples";
 import { Pricing } from "@/components/Pricing";
-import { ScrollRevealController } from "@/components/ScrollRevealController";
 import { TrackedYouTubeEmbed } from "@/components/TrackedYouTubeEmbed";
-import { ScrollReplayIllustration } from "@/components/WorkflowIllustration";
+import { WorkflowIllustrationLite } from "@/components/WorkflowIllustrationLite";
 import { siteUrl } from "@/lib/site";
 import {
   ContactButton,
@@ -332,7 +332,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(faqJsonLd) }}
       />
-      <ScrollRevealController />
+      <DeferredGtmCtaTracker />
 
       <header
         id="flowr-site-header"
@@ -638,7 +638,7 @@ export default function Home() {
           </div>
         </section>
 
-        <ScrollReplayIllustration />
+        <WorkflowIllustrationLite />
 
         <section
           id="flowr-comparison"

@@ -19,9 +19,9 @@ export function GoogleAnalytics({ measurementId }: GoogleAnalyticsProps) {
       <Script
         id="flowr-ga-script"
         src={`https://www.googletagmanager.com/gtag/js?id=${encodedMeasurementId}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Script id="flowr-ga-init" strategy="afterInteractive">
+      <Script id="flowr-ga-init" strategy="lazyOnload">
         {`window.dataLayer = window.dataLayer || []; function gtag(){window.dataLayer.push(arguments);} window.gtag = window.gtag || gtag; window.gtag('js', new Date()); window.gtag('config', '${normalizedMeasurementId}');`}
       </Script>
     </>

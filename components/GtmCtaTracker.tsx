@@ -98,7 +98,10 @@ function isPlainPrimaryClick(event: MouseEvent) {
   );
 }
 
-function shouldDelayNavigation(event: MouseEvent, anchor: HTMLAnchorElement | null) {
+function shouldDelayNavigation(
+  event: MouseEvent,
+  anchor: HTMLAnchorElement | null,
+) {
   if (!anchor || event.defaultPrevented) return false;
   if (!isPlainPrimaryClick(event)) return false;
   if (anchor.target && anchor.target !== "_self") return false;
@@ -111,10 +114,7 @@ function isExtensionStoreUrl(url?: string) {
   return url === chromeStoreUrl || url === firefoxStoreUrl;
 }
 
-function sendOutboundConversionEvent(
-  eventName: string,
-  url?: string,
-) {
+function sendOutboundConversionEvent(eventName: string, url?: string) {
   if (typeof window.gtag !== "function") {
     if (typeof url === "string") window.location.assign(url);
     return;

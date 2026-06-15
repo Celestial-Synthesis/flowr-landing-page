@@ -121,10 +121,7 @@ export default function OfficialRecordingLibrary({
     })
       .then((result) => {
         setRecordings((current) =>
-          sortOfficialRecordingsOldestFirst([
-            ...current,
-            ...result.recordings,
-          ]),
+          sortOfficialRecordingsOldestFirst([...current, ...result.recordings]),
         );
         setNextCursor(result.nextCursor);
         setStatus("ready");
@@ -149,10 +146,11 @@ export default function OfficialRecordingLibrary({
             id="flowr-official-library-heading"
             className="text-lg font-semibold text-[#201916]"
           >
-            Official recordings
+            Start with a guided demo
           </h2>
           <p className="mt-1 text-sm text-[#5f5550]">
-            Public recordings for this playground, shared by the FlowR team.
+            Replay guided demos from the FlowR team so you can experience the
+            FlowR walkthrough before recording one yourself.
           </p>
         </div>
       </div>
@@ -166,8 +164,8 @@ export default function OfficialRecordingLibrary({
           <p className="font-semibold">Publishable token required</p>
           <p className="mt-1 leading-relaxed">
             Set NEXT_PUBLIC_FLOWR_PUBLISHABLE_TOKEN or
-            NEXT_PUBLIC_FLOWR_API_KEY, then rebuild the site to load public
-            recordings.
+            NEXT_PUBLIC_FLOWR_API_KEY, then rebuild the site to load guided
+            demos.
           </p>
         </div>
       )}
@@ -178,7 +176,7 @@ export default function OfficialRecordingLibrary({
           data-testid="official-loading"
           className="rounded-lg border border-[#eadfd8] bg-[#fbf8f5] p-4 text-sm text-[#5f5550]"
         >
-          Loading official recordings…
+          Loading guided demos…
         </p>
       )}
 
@@ -188,7 +186,7 @@ export default function OfficialRecordingLibrary({
           data-testid="official-empty"
           className="rounded-lg border border-[#eadfd8] bg-[#fbf8f5] p-4 text-sm text-[#5f5550]"
         >
-          No public recordings match this playground yet.
+          No guided demos match this playground yet.
         </p>
       )}
 
@@ -198,7 +196,7 @@ export default function OfficialRecordingLibrary({
           data-testid="official-error"
           className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
         >
-          <p className="font-semibold">Unable to load official recordings</p>
+          <p className="font-semibold">Unable to load guided demos</p>
           <p className="mt-1">{errorMessage}</p>
           <button
             id="flowr-official-retry"

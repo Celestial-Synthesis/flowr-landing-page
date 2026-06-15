@@ -77,21 +77,43 @@ const STORAGE_KEY = "flowr-playground:recordings";
 const OFFICIAL_REPLAY_PANEL_SUPPRESSION_KEY =
   "flowr-playground:official-replay-panel-suppression";
 const OFFICIAL_REPLAY_PANEL_SUPPRESSION_TTL_MS = 60_000;
-const FLOWR_BUBBLE_ICON_URL = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="FlowR"><path fill="#fff" d="M6 5.5A1.5 1.5 0 0 1 7.5 4h10a1.5 1.5 0 0 1 0 3h-8v3.25h6.5a1.5 1.5 0 0 1 0 3H9.5V18.5a1.5 1.5 0 0 1-3 0v-13Z"/></svg>',
-)}`;
+const FLOWR_BUBBLE_ICON_URL = "/flowr48.png";
 const FLOWR_BUBBLE_CSS = `
+  @keyframes flowr-bubble-pulse {
+    0%,
+    100% {
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.18),
+        0 2px 6px rgba(0, 0, 0, 0.08),
+        0 0 0 0 rgba(122, 38, 63, 0.22);
+    }
+
+    50% {
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.18),
+        0 2px 6px rgba(0, 0, 0, 0.08),
+        0 0 0 12px rgba(122, 38, 63, 0);
+    }
+  }
+
   .bubble {
-    background: #7a263f;
+    background: linear-gradient(180deg, #fffdfd 0%, #fff2f5 100%);
+    border: 1px solid rgba(122, 38, 63, 0.16);
+    animation: flowr-bubble-pulse 2.8s ease-in-out infinite;
   }
 
   .bubble:hover {
-    background: #681f35;
+    background: #ffffff;
+    animation-play-state: paused;
+  }
+
+  .bubble:active {
+    animation-play-state: paused;
   }
 
   .bubble img {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
   }
 `;
 

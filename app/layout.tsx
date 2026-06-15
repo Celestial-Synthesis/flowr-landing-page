@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
-import { GtmCtaTracker } from "@/components/GtmCtaTracker";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -113,7 +112,6 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-[#fbf8f5] text-[#201916]">
         <GoogleAnalytics measurementId={googleAnalyticsMeasurementId} />
-        <GtmCtaTracker />
         {children}
       </body>
     </html>

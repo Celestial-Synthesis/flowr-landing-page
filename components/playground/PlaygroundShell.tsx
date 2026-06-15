@@ -165,13 +165,19 @@ function RecorderControls({ handle }: { handle: RecorderHandle }) {
       aria-labelledby="flowr-recorder-controls-heading"
       className="rounded-xl border border-[#eadfd8] bg-white p-6"
     >
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2
-          id="flowr-recorder-controls-heading"
-          className="text-lg font-semibold text-[#201916]"
-        >
-          Recorder controls
-        </h2>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-2xl">
+          <h2
+            id="flowr-recorder-controls-heading"
+            className="text-lg font-semibold text-[#201916]"
+          >
+            Try recording without the extension
+          </h2>
+          <p className="mt-1 text-sm text-[#5f5550]">
+            Use the built-in recorder below to try FlowR on this page before you
+            install the browser extension.
+          </p>
+        </div>
         <span
           id="flowr-recorder-status"
           data-testid="recorder-status"
@@ -498,9 +504,10 @@ export default function PlaygroundShell() {
           FlowR Playground
         </h1>
         <p className="mt-3 max-w-2xl text-base text-[#5f5550] leading-relaxed">
-          Try FlowR without installing anything. Record interactions on the
-          practice surfaces below, then replay them instantly. Your recordings
-          are stored locally in this browser only.
+          Try FlowR without installing anything. Replay a sample recording to
+          see the guided experience, then try recording interactions on the
+          things to try below. Your recordings are stored locally in this
+          browser only.
         </p>
 
         {extensionInstalled && (
@@ -511,8 +518,13 @@ export default function PlaygroundShell() {
         )}
       </div>
 
+      {/* Sample library */}
+      <div className="mt-10">
+        <OfficialRecordingLibrary recorder={recorder} />
+      </div>
+
       {/* Local SDK recorder */}
-      <div className="flex flex-col gap-6">
+      <div className="mt-10 flex flex-col gap-6">
         <RecorderControls handle={recorder} />
         <SavedRecordingsList handle={recorder} />
       </div>
@@ -523,17 +535,12 @@ export default function PlaygroundShell() {
         </div>
       )}
 
-      {/* Practice surfaces */}
+      {/* Things to try */}
       <div className="mt-12">
         <h2 className="mb-6 text-2xl font-semibold text-[#201916]">
-          Practice surfaces
+          Things to try
         </h2>
         <PlaygroundSurfaces />
-      </div>
-
-      {/* Official library */}
-      <div className="mt-12">
-        <OfficialRecordingLibrary recorder={recorder} />
       </div>
     </div>
   );
