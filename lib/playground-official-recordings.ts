@@ -2,6 +2,26 @@ import { siteUrl } from "@/lib/site";
 
 const DEFAULT_FLOWR_API_BASE_URL = "https://rfeiamxssoajeabwyean.supabase.co";
 const DEFAULT_FILTERED_SCAN_PAGE_LIMIT = 50;
+const RECORDINGS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+type RecordingsCacheEntry = {
+  result: OfficialRecordingListResult;
+  expiresAt: number;
+};
+
+const recordingsCache = new Map<string, RecordingsCacheEntry>();
+
+function makeRecordingsCacheKey(
+  limit: number,
+  cursor: string | undefined,
+  targetUrl: string | undefined,
+): string {
+  return JSON.stringify({
+    limit,
+    cursor: cursor ?? null,
+    targetUrl: targetUrl ?? null,
+  });
+}
 
 export type FlowrSelectorInfo = {
   css: string;
@@ -231,6 +251,12 @@ export async function fetchOfficialRecordings({
     throw new Error("FlowR publishable token is not configured.");
   }
 
+  const cacheKey = makeRecordingsCacheKey(limit, cursor, targetUrl);
+  const cached = recordingsCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.result;
+  }
+
   const recordings: OfficialRecordingEntry[] = [];
   let nextCursor: string | undefined = cursor;
   let scannedPageCount = 0;
@@ -296,8 +322,15 @@ export async function fetchOfficialRecordings({
     scannedPageCount < maxScanPages
   );
 
-  return {
+  const result: OfficialRecordingListResult = {
     recordings,
     ...(nextCursor ? { nextCursor } : {}),
   };
+
+  recordingsCache.set(cacheKey, {
+    result,
+    expiresAt: Date.now() + RECORDINGS_CACHE_TTL_MS,
+  });
+
+  return result;
 }

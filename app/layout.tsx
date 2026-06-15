@@ -110,6 +110,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="preconnect" href="https://www.youtube-nocookie.com" />
+        <link rel="dns-prefetch" href="https://www.youtube-nocookie.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+      </head>
       <body className="min-h-full bg-[#fbf8f5] text-[#201916]">
         <GoogleAnalytics measurementId={googleAnalyticsMeasurementId} />
         {children}
