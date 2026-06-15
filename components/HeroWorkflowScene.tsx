@@ -55,7 +55,6 @@ export function HeroWorkflowScene({ className = "" }: HeroWorkflowSceneProps) {
   const lastProgressRef = useRef(-1);
 
   useEffect(() => {
-    const readyTimer = window.setTimeout(() => setIsReady(true), 1160);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const desktopViewport = window.matchMedia("(min-width: 1024px)");
 
@@ -65,10 +64,10 @@ export function HeroWorkflowScene({ className = "" }: HeroWorkflowSceneProps) {
         setHeroProgressVariables(scene, 0);
       }
 
-      return () => {
-        window.clearTimeout(readyTimer);
-      };
+      return;
     }
+
+    const readyTimer = window.setTimeout(() => setIsReady(true), 1160);
 
     const measureScrollRange = () => {
       const scene = sceneRef.current;

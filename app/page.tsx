@@ -20,9 +20,11 @@ import {
 import { BrowserAwareInstallButton } from "@/components/BrowserAwareInstallButton";
 import { DeferredGtmCtaTracker } from "@/components/DeferredGtmCtaTracker";
 import { Faq, faqItems } from "@/components/Faq";
+import { HeroWorkflowScene } from "@/components/HeroWorkflowScene";
 import { Pricing } from "@/components/Pricing";
+import { ScrollRevealController } from "@/components/ScrollRevealController";
 import { TrackedYouTubeEmbed } from "@/components/TrackedYouTubeEmbed";
-import { WorkflowIllustrationLite } from "@/components/WorkflowIllustrationLite";
+import { ScrollReplayIllustration } from "@/components/WorkflowIllustration";
 import { siteUrl } from "@/lib/site";
 import {
   ContactButton,
@@ -32,24 +34,10 @@ import {
   firefoxStoreUrl,
 } from "@/components/StoreButtons";
 
-const HeroWorkflowScene = dynamic(
-  () =>
-    import("@/components/HeroWorkflowScene").then((m) => ({
-      default: m.HeroWorkflowScene,
-    })),
-);
-
 const EnterpriseSdkExamples = dynamic(
   () =>
     import("@/components/EnterpriseSdkExamples").then((m) => ({
       default: m.EnterpriseSdkExamples,
-    })),
-);
-
-const ScrollRevealController = dynamic(
-  () =>
-    import("@/components/ScrollRevealController").then((m) => ({
-      default: m.ScrollRevealController,
     })),
 );
 
@@ -353,6 +341,7 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: jsonLd(faqJsonLd) }}
       />
       <DeferredGtmCtaTracker />
+      <ScrollRevealController />
 
       <header
         id="flowr-site-header"
@@ -658,7 +647,7 @@ export default function Home() {
           </div>
         </section>
 
-        <WorkflowIllustrationLite />
+        <ScrollReplayIllustration />
 
         <section
           id="flowr-comparison"

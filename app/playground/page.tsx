@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { siteUrl } from "@/lib/site";
+import "./playground.css";
 import PlaygroundShell from "@/components/playground/PlaygroundShell";
 
 export const metadata: Metadata = {

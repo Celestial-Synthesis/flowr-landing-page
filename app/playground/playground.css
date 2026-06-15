@@ -1,0 +1,84 @@
+#flowr-playground-shell :is(
+  a[href],
+  button:not(:disabled),
+  select:not(:disabled),
+  summary,
+  [role="button"],
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  label:has(input[type="checkbox"]:not(:disabled)),
+  label:has(input[type="radio"]:not(:disabled))
+) {
+  cursor: pointer;
+}
+
+.flowr-cursor {
+  animation: flowr-cursor 2.8s ease-in-out infinite;
+}
+
+.flowr-pointer-cursor--caret {
+  width: 20px;
+  height: 50px;
+  clip-path: inset(0 round 5px);
+  filter: drop-shadow(0 8px 12px rgb(32 25 22 / 0.2));
+}
+
+.flowr-pointer-cursor--caret::after {
+  inset: 4px 6px;
+  clip-path: inset(0 round 3px);
+  animation: flowr-caret-pulse 1.05s ease-in-out infinite;
+}
+
+.flowr-mock-cursor {
+  left: var(--flowr-mock-cursor-left);
+  top: var(--flowr-mock-cursor-top);
+}
+
+@media (max-width: 639px) {
+  .flowr-mock-cursor {
+    left: var(--flowr-mock-cursor-mobile-left);
+    top: var(--flowr-mock-cursor-mobile-top);
+  }
+}
+
+.flowr-stage-content {
+  animation: flowr-stage-content 520ms ease both;
+}
+
+@keyframes flowr-cursor {
+  0%,
+  100% {
+    transform: translateY(-50%) translateX(0);
+  }
+
+  45% {
+    transform: translateY(-50%) translateX(-34px);
+  }
+
+  58% {
+    transform: translateY(-50%) translateX(-34px) scale(0.9);
+  }
+}
+
+@keyframes flowr-stage-content {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes flowr-caret-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.38;
+  }
+}
