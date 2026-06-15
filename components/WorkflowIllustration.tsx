@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -1163,6 +1163,7 @@ function StageTargetContent({
 
 export function ScrollReplayIllustration() {
   const [activeStage, setActiveStage] = useState(0);
+  const [isInteractive, setIsInteractive] = useState(false);
   const [measuredLayouts, setMeasuredLayouts] = useState<
     Array<MeasuredMockLayout | null>
   >([]);
@@ -1190,7 +1191,34 @@ export function ScrollReplayIllustration() {
     handled: boolean;
   } | null>(null);
 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+
+        setIsInteractive(true);
+        observer.disconnect();
+      },
+      {
+        // Start wiring interactions shortly before the sticky section reaches view.
+        rootMargin: "200px 0px 200px 0px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(root);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   useLayoutEffect(() => {
+    if (!isInteractive) return;
+
     const root = rootRef.current;
     if (!root) return;
 
@@ -1384,9 +1412,11 @@ export function ScrollReplayIllustration() {
       window.removeEventListener("touchend", resetTouchGesture);
       window.removeEventListener("touchcancel", resetTouchGesture);
     };
-  }, []);
+  }, [isInteractive]);
 
   useLayoutEffect(() => {
+    if (!isInteractive) return;
+
     const updateMeasuredLayouts = () => {
       measureFrameRef.current = null;
       const canvas = canvasRef.current;
@@ -1498,18 +1528,18 @@ export function ScrollReplayIllustration() {
       resizeObserver.disconnect();
       window.removeEventListener("resize", requestMeasure);
     };
-  }, []);
+  }, [isInteractive]);
 
   const stage = stages[activeStage];
   const StageIcon = stage.icon;
-  const supportPanelsByStage = useMemo(
+  const supportPanels = useMemo(
     () =>
-      stages.map((workflowStage, index) =>
-        createSupportPanels(workflowStage, measuredLayouts[index]),
+      createSupportPanels(
+        stage,
+        isInteractive ? measuredLayouts[activeStage] : null,
       ),
-    [measuredLayouts],
+    [activeStage, isInteractive, measuredLayouts, stage],
   );
-  const supportPanels = supportPanelsByStage[activeStage];
 
   return (
     <section
@@ -1586,74 +1616,76 @@ export function ScrollReplayIllustration() {
                 {stage.progress}
               </div>
 
-              <div
-                className="flowr-mock-measure-layer invisible pointer-events-none absolute inset-0"
-                aria-hidden="true"
-              >
-                {stages.map((item, index) => {
-                  const MeasureIcon = item.icon;
+              {isInteractive ? (
+                <div
+                  className="flowr-mock-measure-layer invisible pointer-events-none absolute inset-0"
+                  aria-hidden="true"
+                >
+                  {stages.map((item, index) => {
+                    const MeasureIcon = item.icon;
 
-                  return (
-                    <div
-                      key={`measure-${item.activeTarget}`}
-                      className="contents"
-                    >
+                    return (
                       <div
-                        ref={(element) => {
-                          measuredStageCardRefs.current[index] = element;
-                        }}
-                        className="flowr-mock-stage-card absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] items-start gap-3 rounded-lg border border-[#eadfd8] bg-white/92 p-3 shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:left-6 sm:top-6 sm:max-w-xl"
+                        key={`measure-${item.activeTarget}`}
+                        className="contents"
                       >
-                        <div className="flowr-mock-stage-icon grid size-10 shrink-0 place-items-center rounded-md bg-[#7a263f] text-white">
-                          <MeasureIcon aria-hidden="true" className="size-5" />
-                        </div>
-                        <div className="flowr-mock-stage-copy">
-                          <p className="flowr-mock-stage-kicker text-xs font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
-                            {item.kicker}
-                          </p>
-                          <p className="flowr-mock-stage-title mt-1 text-sm font-semibold leading-5 text-[#201916] sm:text-base">
-                            {item.title}
-                          </p>
-                          <p className="flowr-mock-stage-body mt-1 hidden max-w-lg text-sm leading-5 text-[#675f59] lg:block">
-                            {item.body}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div
-                        ref={(element) => {
-                          measuredProgressBadgeRefs.current[index] = element;
-                        }}
-                        className="flowr-mock-progress-badge absolute right-4 top-4 z-10 hidden rounded-lg border border-[#eadfd8] bg-white/92 px-3 py-2 text-sm font-semibold text-[#7a263f] shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:right-6 sm:top-6 sm:block"
-                      >
-                        {item.progress}
-                      </div>
-
-                      <div
-                        ref={(element) => {
-                          measuredHighlightRefs.current[index] = element;
-                        }}
-                        className={`flowr-mock-highlight flowr-mock-highlight--${item.activeTarget} absolute z-20 min-h-[112px] min-w-[220px] max-sm:!left-4 max-sm:!right-4 max-sm:!h-auto max-sm:!min-h-0 max-sm:!w-auto rounded-lg border-2 border-[#7a263f] bg-[#fff3ee] shadow-[0_0_0_8px_rgba(122,38,63,0.12)] ${
-                          item.activeTarget === "owner" ||
-                          item.activeTarget === "instruction" ||
-                          item.activeTarget === "share"
-                            ? "overflow-visible"
-                            : "overflow-hidden"
-                        }`}
-                        style={item.target}
-                      >
-                        <StageTargetContent
-                          isMeasurement
-                          stage={item}
-                          targetRef={(element) => {
-                            measuredCursorTargetRefs.current[index] = element;
+                        <div
+                          ref={(element) => {
+                            measuredStageCardRefs.current[index] = element;
                           }}
-                        />
+                          className="flowr-mock-stage-card absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] items-start gap-3 rounded-lg border border-[#eadfd8] bg-white/92 p-3 shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:left-6 sm:top-6 sm:max-w-xl"
+                        >
+                          <div className="flowr-mock-stage-icon grid size-10 shrink-0 place-items-center rounded-md bg-[#7a263f] text-white">
+                            <MeasureIcon aria-hidden="true" className="size-5" />
+                          </div>
+                          <div className="flowr-mock-stage-copy">
+                            <p className="flowr-mock-stage-kicker text-xs font-semibold uppercase tracking-[0.14em] text-[#7a263f]">
+                              {item.kicker}
+                            </p>
+                            <p className="flowr-mock-stage-title mt-1 text-sm font-semibold leading-5 text-[#201916] sm:text-base">
+                              {item.title}
+                            </p>
+                            <p className="flowr-mock-stage-body mt-1 hidden max-w-lg text-sm leading-5 text-[#675f59] lg:block">
+                              {item.body}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div
+                          ref={(element) => {
+                            measuredProgressBadgeRefs.current[index] = element;
+                          }}
+                          className="flowr-mock-progress-badge absolute right-4 top-4 z-10 hidden rounded-lg border border-[#eadfd8] bg-white/92 px-3 py-2 text-sm font-semibold text-[#7a263f] shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:right-6 sm:top-6 sm:block"
+                        >
+                          {item.progress}
+                        </div>
+
+                        <div
+                          ref={(element) => {
+                            measuredHighlightRefs.current[index] = element;
+                          }}
+                          className={`flowr-mock-highlight flowr-mock-highlight--${item.activeTarget} absolute z-20 min-h-[112px] min-w-[220px] max-sm:!left-4 max-sm:!right-4 max-sm:!h-auto max-sm:!min-h-0 max-sm:!w-auto rounded-lg border-2 border-[#7a263f] bg-[#fff3ee] shadow-[0_0_0_8px_rgba(122,38,63,0.12)] ${
+                            item.activeTarget === "owner" ||
+                            item.activeTarget === "instruction" ||
+                            item.activeTarget === "share"
+                              ? "overflow-visible"
+                              : "overflow-hidden"
+                          }`}
+                          style={item.target}
+                        >
+                          <StageTargetContent
+                            isMeasurement
+                            stage={item}
+                            targetRef={(element) => {
+                              measuredCursorTargetRefs.current[index] = element;
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              ) : null}
 
               <div
                 id="flowr-mock-step-rail"
