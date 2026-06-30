@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { OfficialRecording } from "@/lib/playground-official-recordings";
+import { playgroundSdkEntryUrl } from "@/lib/playground-sdk-runtime";
 
 export type RecorderStatus =
   | "idle"
@@ -72,7 +73,20 @@ type SdkModule = {
   }): SdkHandle;
 };
 
-const SDK_URL = "/vendor/flowr/sdk-recorder-local/index.js";
+const SDK_URL = playgroundSdkEntryUrl;
+
+let sdkModulePreload: Promise<SdkModule> | null = null;
+
+const preloadLocalRecorderSdk = (): Promise<SdkModule> => {
+  if (!sdkModulePreload) {
+    sdkModulePreload = import(/* webpackIgnore: true */ SDK_URL) as Promise<SdkModule>;
+  }
+  return sdkModulePreload;
+};
+
+if (typeof window !== "undefined") {
+  void preloadLocalRecorderSdk();
+}
 const STORAGE_KEY = "flowr-playground:recordings";
 const OFFICIAL_REPLAY_PANEL_SUPPRESSION_KEY =
   "flowr-playground:official-replay-panel-suppression";
@@ -263,7 +277,7 @@ export function useLocalRecorder(): RecorderHandle {
     let destroyed = false;
     mountedRef.current = true;
 
-    import(/* webpackIgnore: true */ SDK_URL)
+    preloadLocalRecorderSdk()
       .then((mod: SdkModule) => {
         if (destroyed) return;
 

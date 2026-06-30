@@ -1,0 +1,43 @@
+---
+description: FlowR landing page project guidance
+alwaysApply: true
+---
+
+# FlowR Landing Page
+
+This is the FlowR marketing and playground site. It is a Next.js 16.2 App Router project using React 19, TypeScript, Tailwind CSS 4, and static export (`output: "export"` in `next.config.ts`).
+
+## Before Editing
+
+- Check `AGENTS.md` first. This repo uses a newer Next.js version; inspect installed Next documentation when available before relying on older Next assumptions.
+- Preserve existing user changes. At the time this rule was added, app files may already be modified by the user.
+- Prefer small, focused edits that match the existing component and CSS style.
+- Do not read or expose `.env*` files unless the user explicitly asks.
+
+## Commands
+
+- Install: `npm install`
+- Develop: `npm run dev`
+- Lint: `npm run lint`
+- Build/static export: `npm run build`
+- Serve exported output: `npm run start`
+
+`npm run dev` and `npm run build` run `npm run hydrate:sdk:local` first. That hydrates the local playground SDK runtime from vendored packages.
+
+## FlowR SDK Runtime
+
+- The SDK sync script is `scripts/sync-flowr-sdk-local.mjs`.
+- `npm run sync:sdk:local` packages SDK artifacts from the sibling repo at `../flowr` and stores package archives under `vendor/flowr/sdk-packages`.
+- `npm run hydrate:sdk:local` hydrates `public/vendor/flowr/sdk-recorder-local` from the vendored package archives.
+- Treat `public/vendor/` as generated output. Do not hand-edit it.
+
+## Static Export Constraints
+
+- Avoid server-only runtime behavior in routes/components that must work in static export.
+- Keep image handling compatible with `images.unoptimized: true`.
+- Site metadata and canonical URLs are centralized in `lib/site.ts`; prefer updating that module instead of duplicating URL logic.
+
+## Verification
+
+- Run `npm run lint` after code changes.
+- Run `npm run build` for changes that affect Next routing, metadata, static export behavior, the playground, or SDK asset hydration.

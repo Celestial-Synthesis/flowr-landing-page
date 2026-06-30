@@ -1636,7 +1636,10 @@ export function ScrollReplayIllustration() {
                           className="flowr-mock-stage-card absolute left-4 top-4 z-10 flex max-w-[calc(100%-2rem)] items-start gap-3 rounded-lg border border-[#eadfd8] bg-white/92 p-3 shadow-lg shadow-[#7a263f]/5 backdrop-blur sm:left-6 sm:top-6 sm:max-w-xl"
                         >
                           <div className="flowr-mock-stage-icon grid size-10 shrink-0 place-items-center rounded-md bg-[#7a263f] text-white">
-                            <MeasureIcon aria-hidden="true" className="size-5" />
+                            <MeasureIcon
+                              aria-hidden="true"
+                              className="size-5"
+                            />
                           </div>
                           <div className="flowr-mock-stage-copy">
                             <p className="flowr-mock-stage-kicker text-xs font-semibold uppercase tracking-[0.14em] text-[#7a263f]">

@@ -3,13 +3,87 @@ import { siteUrl } from "@/lib/site";
 const DEFAULT_FLOWR_API_BASE_URL = "https://rfeiamxssoajeabwyean.supabase.co";
 const DEFAULT_FILTERED_SCAN_PAGE_LIMIT = 50;
 const RECORDINGS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const OFFICIAL_RECORDINGS_STORAGE_KEY =
+  "flowr-playground:official-recordings-cache:v1";
 
 type RecordingsCacheEntry = {
   result: OfficialRecordingListResult;
   expiresAt: number;
 };
 
+type PersistedRecordingsCacheEntry = {
+  cacheKey: string;
+  expiresAt: number;
+  result: OfficialRecordingListResult;
+};
+
 const recordingsCache = new Map<string, RecordingsCacheEntry>();
+
+const getBrowserStorage = (): Storage | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+};
+
+const readPersistedRecordingsCache = (
+  cacheKey: string,
+): OfficialRecordingListResult | null => {
+  const storage = getBrowserStorage();
+  if (!storage) {
+    return null;
+  }
+
+  try {
+    const raw = storage.getItem(OFFICIAL_RECORDINGS_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as PersistedRecordingsCacheEntry;
+    if (
+      !parsed ||
+      parsed.cacheKey !== cacheKey ||
+      typeof parsed.expiresAt !== "number" ||
+      Date.now() >= parsed.expiresAt ||
+      !parsed.result ||
+      !Array.isArray(parsed.result.recordings)
+    ) {
+      return null;
+    }
+
+    return parsed.result;
+  } catch {
+    return null;
+  }
+};
+
+const writePersistedRecordingsCache = (
+  cacheKey: string,
+  result: OfficialRecordingListResult,
+): void => {
+  const storage = getBrowserStorage();
+  if (!storage) {
+    return;
+  }
+
+  try {
+    const payload: PersistedRecordingsCacheEntry = {
+      cacheKey,
+      expiresAt: Date.now() + RECORDINGS_CACHE_TTL_MS,
+      result,
+    };
+    storage.setItem(OFFICIAL_RECORDINGS_STORAGE_KEY, JSON.stringify(payload));
+    notifyOfficialRecordingsCacheListeners();
+  } catch {
+    /* ignore quota / privacy mode failures */
+  }
+};
 
 function makeRecordingsCacheKey(
   limit: number,
@@ -22,6 +96,48 @@ function makeRecordingsCacheKey(
     targetUrl: targetUrl ?? null,
   });
 }
+
+
+
+const officialRecordingsCacheListeners = new Set<() => void>();
+
+const notifyOfficialRecordingsCacheListeners = (): void => {
+  officialRecordingsCacheListeners.forEach((listener) => listener());
+};
+
+export const subscribeToOfficialRecordingsCache = (
+  listener: () => void,
+): (() => void) => {
+  officialRecordingsCacheListeners.add(listener);
+  return () => {
+    officialRecordingsCacheListeners.delete(listener);
+  };
+};
+
+export const getOfficialRecordingsCacheSnapshot = (
+  targetUrl: string = playgroundOfficialRecordingTargetUrl,
+): OfficialRecordingListResult | null =>
+  readCachedOfficialRecordings({ targetUrl });
+
+export const getOfficialRecordingsCacheServerSnapshot =
+  (): OfficialRecordingListResult | null => null;
+
+export function readCachedOfficialRecordings({
+  limit = 12,
+  cursor,
+  targetUrl,
+}: Pick<FetchOfficialRecordingsOptions, "limit" | "cursor" | "targetUrl"> = {}):
+  | OfficialRecordingListResult
+  | null {
+  const cacheKey = makeRecordingsCacheKey(limit, cursor, targetUrl);
+  const cached = recordingsCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.result;
+  }
+
+  return readPersistedRecordingsCache(cacheKey);
+}
+
 
 export type FlowrSelectorInfo = {
   css: string;
@@ -257,6 +373,15 @@ export async function fetchOfficialRecordings({
     return cached.result;
   }
 
+  const persisted = readPersistedRecordingsCache(cacheKey);
+  if (persisted) {
+    recordingsCache.set(cacheKey, {
+      result: persisted,
+      expiresAt: Date.now() + RECORDINGS_CACHE_TTL_MS,
+    });
+    return persisted;
+  }
+
   const recordings: OfficialRecordingEntry[] = [];
   let nextCursor: string | undefined = cursor;
   let scannedPageCount = 0;
@@ -331,6 +456,7 @@ export async function fetchOfficialRecordings({
     result,
     expiresAt: Date.now() + RECORDINGS_CACHE_TTL_MS,
   });
+  writePersistedRecordingsCache(cacheKey, result);
 
   return result;
 }

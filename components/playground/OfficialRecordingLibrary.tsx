@@ -8,16 +8,32 @@
  * the selected recording with the local recorder/replay bubble.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { RecorderHandle } from "@/components/playground/LocalRecorderLauncher";
 import {
   fetchOfficialRecordings,
+  getOfficialRecordingsCacheServerSnapshot,
+  getOfficialRecordingsCacheSnapshot,
   officialRecordingsConfig,
   playgroundOfficialRecordingTargetUrl,
+  subscribeToOfficialRecordingsCache,
   type OfficialRecordingEntry,
+  type OfficialRecordingListResult,
 } from "@/lib/playground-official-recordings";
 
-type LoadStatus = "missing-token" | "loading" | "ready" | "empty" | "error";
+type LoadStatus =
+  | "missing-token"
+  | "pending"
+  | "loading"
+  | "ready"
+  | "empty"
+  | "error";
 
 const formatRecordingDate = (updatedAt: number): string =>
   new Date(updatedAt).toLocaleDateString(undefined, {
@@ -46,71 +62,126 @@ const sortOfficialRecordingsOldestFirst = (
     );
   });
 
+const deriveLoadStatus = ({
+  hasToken,
+  activeResult,
+  fetchState,
+}: {
+  hasToken: boolean;
+  activeResult: OfficialRecordingListResult | null;
+  fetchState: "idle" | "loading" | "done" | "error";
+}): LoadStatus => {
+  if (!hasToken) {
+    return "missing-token";
+  }
+
+  if (activeResult) {
+    return activeResult.recordings.length > 0 ? "ready" : "empty";
+  }
+
+  if (fetchState === "error") {
+    return "error";
+  }
+
+  if (fetchState === "loading") {
+    return "loading";
+  }
+
+  return "pending";
+};
+
 export default function OfficialRecordingLibrary({
   recorder,
 }: {
   recorder: RecorderHandle;
 }) {
-  const [status, setStatus] = useState<LoadStatus>(() =>
-    officialRecordingsConfig.publishableToken ? "loading" : "missing-token",
+  const hasToken = Boolean(officialRecordingsConfig.publishableToken);
+  const cachedResult = useSyncExternalStore(
+    subscribeToOfficialRecordingsCache,
+    getOfficialRecordingsCacheSnapshot,
+    getOfficialRecordingsCacheServerSnapshot,
   );
-  const [recordings, setRecordings] = useState<OfficialRecordingEntry[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | undefined>();
+  const [fetchedResult, setFetchedResult] =
+    useState<OfficialRecordingListResult | null>(null);
+  const [fetchState, setFetchState] = useState<
+    "idle" | "loading" | "done" | "error"
+  >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const canReplay = recorder.status === "ready";
 
+  const activeResult = fetchedResult ?? cachedResult;
+  const recordings = useMemo(
+    () => sortOfficialRecordingsOldestFirst(activeResult?.recordings ?? []),
+    [activeResult],
+  );
+  const nextCursor = fetchedResult?.nextCursor ?? cachedResult?.nextCursor;
+  const status = deriveLoadStatus({ hasToken, activeResult, fetchState });
+
   useEffect(() => {
     let cancelled = false;
-    if (!officialRecordingsConfig.publishableToken) return;
+    if (!hasToken) {
+      return;
+    }
 
-    void fetchOfficialRecordings({
-      targetUrl: playgroundOfficialRecordingTargetUrl,
-    })
-      .then((result) => {
-        if (cancelled) return;
-        setRecordings(sortOfficialRecordingsOldestFirst(result.recordings));
-        setNextCursor(result.nextCursor);
-        setStatus(result.recordings.length > 0 ? "ready" : "empty");
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return;
+    void (async () => {
+      if (!cachedResult) {
+        setFetchState("loading");
+      }
+
+      try {
+        const result = await fetchOfficialRecordings({
+          targetUrl: playgroundOfficialRecordingTargetUrl,
+        });
+        if (cancelled) {
+          return;
+        }
+        setFetchedResult(result);
+        setFetchState("done");
+      } catch (error: unknown) {
+        if (cancelled) {
+          return;
+        }
+        if (cachedResult?.recordings.length) {
+          setFetchState("done");
+          return;
+        }
         setErrorMessage(resolveErrorMessage(error));
-        setStatus("error");
-      });
+        setFetchState("error");
+      }
+    })();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [cachedResult, hasToken]);
 
   const reload = useCallback(() => {
-    if (!officialRecordingsConfig.publishableToken) {
-      setStatus("missing-token");
+    if (!hasToken) {
       return;
     }
 
-    setStatus("loading");
+    setFetchState("loading");
     setErrorMessage(null);
-    setRecordings([]);
-    setNextCursor(undefined);
+    setFetchedResult(null);
 
     void fetchOfficialRecordings({
       targetUrl: playgroundOfficialRecordingTargetUrl,
     })
       .then((result) => {
-        setRecordings(sortOfficialRecordingsOldestFirst(result.recordings));
-        setNextCursor(result.nextCursor);
-        setStatus(result.recordings.length > 0 ? "ready" : "empty");
+        setFetchedResult(result);
+        setFetchState("done");
       })
       .catch((error: unknown) => {
         setErrorMessage(resolveErrorMessage(error));
-        setStatus("error");
+        setFetchState("error");
       });
-  }, []);
+  }, [hasToken]);
 
   const loadMore = useCallback(() => {
-    if (!nextCursor || isLoadingMore) return;
+    if (!nextCursor || isLoadingMore) {
+      return;
+    }
 
     setIsLoadingMore(true);
     setErrorMessage(null);
@@ -120,18 +191,24 @@ export default function OfficialRecordingLibrary({
       targetUrl: playgroundOfficialRecordingTargetUrl,
     })
       .then((result) => {
-        setRecordings((current) =>
-          sortOfficialRecordingsOldestFirst([...current, ...result.recordings]),
-        );
-        setNextCursor(result.nextCursor);
-        setStatus("ready");
+        setFetchedResult((current) => {
+          const merged = sortOfficialRecordingsOldestFirst([
+            ...(current?.recordings ?? cachedResult?.recordings ?? []),
+            ...result.recordings,
+          ]);
+          return {
+            recordings: merged,
+            ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
+          };
+        });
+        setFetchState("done");
       })
       .catch((error: unknown) => {
         setErrorMessage(resolveErrorMessage(error));
-        setStatus("error");
+        setFetchState("error");
       })
       .finally(() => setIsLoadingMore(false));
-  }, [isLoadingMore, nextCursor]);
+  }, [cachedResult?.recordings, isLoadingMore, nextCursor]);
 
   return (
     <section

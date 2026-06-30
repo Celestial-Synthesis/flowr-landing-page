@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { siteUrl } from "@/lib/site";
 import "./playground.css";
 import PlaygroundShell from "@/components/playground/PlaygroundShell";
+import { playgroundSdkEntryUrl } from "@/lib/playground-sdk-runtime";
 
 export const metadata: Metadata = {
   title: "Try FlowR — Playground",
@@ -20,8 +21,14 @@ export const metadata: Metadata = {
 
 export default function PlaygroundPage() {
   return (
-    <main id="flowr-playground-main" aria-label="FlowR playground">
-      <PlaygroundShell />
-    </main>
+    <>
+      <link
+        rel="modulepreload"
+        href={playgroundSdkEntryUrl}
+      />
+      <main id="flowr-playground-main" aria-label="FlowR playground">
+        <PlaygroundShell />
+      </main>
+    </>
   );
 }

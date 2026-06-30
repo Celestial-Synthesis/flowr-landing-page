@@ -32,25 +32,22 @@ import {
   firefoxStoreUrl,
 } from "@/components/StoreButtons";
 
-const EnterpriseSdkExamples = dynamic(
-  () =>
-    import("@/components/EnterpriseSdkExamples").then((m) => ({
-      default: m.EnterpriseSdkExamples,
-    })),
+const EnterpriseSdkExamples = dynamic(() =>
+  import("@/components/EnterpriseSdkExamples").then((m) => ({
+    default: m.EnterpriseSdkExamples,
+  })),
 );
 
-const ScrollRevealController = dynamic(
-  () =>
-    import("@/components/ScrollRevealController").then((m) => ({
-      default: m.ScrollRevealController,
-    })),
+const ScrollRevealController = dynamic(() =>
+  import("@/components/ScrollRevealController").then((m) => ({
+    default: m.ScrollRevealController,
+  })),
 );
 
-const ScrollReplayIllustration = dynamic(
-  () =>
-    import("@/components/WorkflowIllustration").then((m) => ({
-      default: m.ScrollReplayIllustration,
-    })),
+const ScrollReplayIllustration = dynamic(() =>
+  import("@/components/WorkflowIllustration").then((m) => ({
+    default: m.ScrollReplayIllustration,
+  })),
 );
 
 const capabilities = [
